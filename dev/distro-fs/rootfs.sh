@@ -60,7 +60,7 @@ distro_rootfs() {
 	local tmp_img="/tmp/rootfs.img"
 	local console_env='console-data,console-setup-linux,console-setup,locales,tzdata'
 	local dist_env='lsb-base,lsb-release,git,keyboard-configuration,nano,util-linux'
-	local os_env='ifupdown,iw,kmod,sudo,udev,usbutils,perl,psmisc,rsync,fake-hwclock'
+	local os_env='ifupdown,iw,kmod,sudo,udev,usbutils,perl,psmisc,rsync,dbus,fake-hwclock'
 	local net_env='curl,iproute2,iputils-ping,net-tools,tcpd,wget,openssh-server'
 	local net_dhcp_env='dhcpcd5,isc-dhcp-client,isc-dhcp-common'
 	local netlib_env='libnl-3-200,libnl-genl-3-200,libnl-route-3-200,libssl-dev'
@@ -94,7 +94,7 @@ distro_rootfs() {
 		
 		if [[ ${exit_code_deb} -ne 0 ]]; then
 		
-			echo -en "${distro} ${rel} (version ${distro_id}) seems not supported for the ${arch} architecture...\n"
+			echo -en "${distro} ${rel} seems not supported for the ${arch} architecture...\n"
 			echo -en "You have to change the release and the distro id variables...\n\n"
 			
 		
@@ -230,7 +230,6 @@ os_build() {
 	
 		done
 
-		shred -v -n 1 -z ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static >/dev/null 2>&1
 		truncate -s 0 ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static >/dev/null 2>&1
 		rm ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static
 		
