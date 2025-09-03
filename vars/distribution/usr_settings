@@ -1,0 +1,13 @@
+# You can choose your timezone with the command "timedatectl list-timezones"
+# The locales list are in the file "/etc/locale.gen"
+# The keyboard supported options list are in the file "/usr/share/X11/xkb/rules/xorg.lst" 
+
+user='pi'
+password='raspberry'
+hostname='raspberrypi'
+timezone='Etc/Universal'
+LANG_CODE='en_US'
+LANG='en'
+keyb_variant='pc105'
+keyb_layout='us'
+bashrc_usr="/home/${user}/.bashrc"

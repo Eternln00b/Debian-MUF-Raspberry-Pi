@@ -1,0 +1,7 @@
+DIST="debian"
+RELEASE="trixie"
+ID="13"
+APT_URL="http://deb.debian.org/debian"
+ARCHIVE_KEY="https://ftp-master.debian.org/keys/archive-key-${ID}.asc"
+APT_URL_SEC="http://security.debian.org/debian-security/"
+KEY_FILE="/usr/share/keyrings/${DIST}-release-${ID}.gpg"
