@@ -180,12 +180,12 @@ os_build() {
 	if [[ ${mnt_chck} -ne 2 ]];then
 	
 		echo -en "The loop device isn't mounted...\n"
-		exit
+		return 1
 		
 	elif [[ ! -d "${firmware_precomp}" ]];then
 	
 		echo -en "The firmware folder is missing...\n" 
-		exit
+		return 1
 	
 	else
 			
@@ -195,7 +195,7 @@ os_build() {
 		if [[ ! -f ${firmware_precomp}/bootcode.bin ]];then
 		
 			echo -en "The bootcode ${firmware_precomp}/bootcode.bin is missing...\n"
-			exit
+			return 1
 		
 		else
 		
@@ -220,18 +220,21 @@ os_build() {
 			chroot "${mnt_rootfs}" "${chrt_script}"
 			exit_code=$?
 		
-			if [[ $exit_code -ne 0 ]]; then
+			if [[ ${exit_code} -ne 0 ]]; then
 		
 				echo -en "There's an issue with the chroot script ${chrt_script}...\n"
-				rm -rf "${img_name}" >/dev/null 2>&1
-				exit
+				return 1
         
 			fi
 	
 		done
 
-		truncate -s 0 ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static >/dev/null 2>&1
-		rm ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static
+		if [[ ${exit_code} -eq 0 ]]; then
+
+			truncate -s 0 ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static >/dev/null 2>&1
+			rm ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static
+		
+		fi
 		
 	fi	
 	

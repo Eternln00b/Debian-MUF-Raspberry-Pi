@@ -40,11 +40,16 @@ finish () {
 	umount -l "${chrootfs}" || true
 	kpartx -dvs ${img_name} >/dev/null 2>&1
 	rm -rf "${chrootfs}" "/tmp/dev-scripts"
+	[[ ${os_build_exec} -ne 0 ]] && rm ${img_name}
 		
-	if [[ ${img_comp} = true ]];then
+	if [[ ! -f ${img_name_c} ]];then
 
-		echo -en "The file ${img_name} is gonna be compressed !\n\n"
-		xz -k --best ${img_name}
+		if [[ -f ${img_name} && ${img_comp} = true ]];then
+
+			echo -en "The file ${img_name} is gonna be compressed !\n\n"
+			xz -k --best ${img_name}
+
+		fi
 
 	fi
 
@@ -124,9 +129,19 @@ else
 	chroot_scripts="${DEV_FNCS}/chroot-dev"
 	chroot_usr="${DEV_VARS}/distribution/usr_settings"
 	
+	if [[ -z ${img_comp} ]];then 
+	
+		img_comp=false
+		
+	else
+	
+		img_name_c="${img_name}.xz"
+	
+	fi
+	
 	[[ -z ${Kernel_cfg} ]] && Kernel_cfg=false
-	[[ -z ${img_comp} ]] && img_comp=false
-	[[ -f ${img_name} ]] && rm -rf ${img_name}
+	[[ -f ${img_name} ]] && rm ${img_name}
+	[[ -f ${img_name_c} ]] && rm ${img_name_c}
 	[[ ! -d ${chrootfs} ]] && mkdir -p ${chrootfs}
 	
 	dev_pkgs
@@ -145,6 +160,16 @@ else
 	
 	os_pre_build '80M' '1200M' "${chrootfs}" "${img_name}" "${rootfs_targz}" 
 	os_build "${arch}" "${chrootfs}" "${img_name}" "${firmw_crep}"
-	kernel_install "${kernel_crep}" "${KDEV_ARCH}" "${KERNEL}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${chrootfs}"
+	os_build_exec=$?
+	
+	if [[ ${os_build_exec} -eq 0 ]];then
+	
+		kernel_install "${kernel_crep}" "${KDEV_ARCH}" "${KERNEL}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${chrootfs}"
+	
+	else
+	
+		echo -en "We can't build the image... \n"
+
+	fi
 
 fi 

@@ -70,8 +70,6 @@ if [ -s /lib/systemd/system/ifup@.service ]; then
 
 fi
 
-# systemctl enable sshd.service 
-
 # cleaning the img
 
 echo -en "\nWe are cleaning the img...\n"
