@@ -1,5 +1,5 @@
-# Raspberry Pi OS alt
-"Raspberry Pi OS alt" is a set of scripts that simplifies and automates the process of building a complete and bootable Debian image for Raspberry Pi SBCs.
+# Debian Made up for Raspberry Pi
+"Debian Made up for Raspberry Pi" is a set of scripts that simplifies and automates the process of building a complete and bootable Debian image for Raspberry Pi SBCs.
  
 The goal of this project is to build a headless and generic Debian image with the Kernel version of your choice. By default, it use the recent one. You can configure the kernel if needed.
  
