@@ -9,6 +9,6 @@ It's also possible to build an Ubuntu image but, you will have to dig the code. 
 
 usage :
 ```bash
-main.sh -R <Raspberry pi Hardware (RPi5|RPi4|RPi3|RPi2|RPi1)> [opt][-a <arch (aarch64|armhf)> -c <enable kernel conf> -x <enable img compression>]
+main.sh -R <RPi Model (RPi5|RPi4|RPi3|RPi2|RPi1)> [opt][-a <arch (aarch64|armhf)> -c <enable kernel conf> -x <enable img compression>]
 ```
 
