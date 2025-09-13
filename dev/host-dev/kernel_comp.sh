@@ -8,14 +8,21 @@ kernel_comp() {
 	local CC_COMP=$4
 	local DEF_CFG=$5
 	local K_CFG=$6
+	local dtb_srch_dir="${kernel_src_dir}/arch/${K_ARCH}/boot/dts/broadcom"
 	local K_IMG_PATH="${kernel_src_dir}/arch/${K_ARCH}/boot/${K_IMG}"
-	local dtb_srch=${DEF_CFG%"_defconfig"}
 	local PROC=$(nproc)
-		
-	[[ "${K_ARCH}" == "arm64" ]] && local dtb_srch_dir="${kernel_src_dir}/arch/${K_ARCH}/boot/dts/broadcom"
-	[[ "${K_ARCH}" == "arm" ]] && local dtb_srch_dir="${kernel_src_dir}/arch/${K_ARCH}/boot/dts"
-		
-	dtb_comp=$(find ${dtb_srch_dir}/${DEFCONFIG%"_defconfig"}*.dtb -type f 2>/dev/null | wc -l)
+			
+	if [[ ${DEF_CFG} == "bcmrpi_defconfig" ]];then
+	
+		local dtb_srch={bcm2708,bcm2835}
+	
+	else
+	
+		local dtb_srch=${DEF_CFG%"_defconfig"}
+	
+	fi
+			
+	dtb_comp=$(find ${dtb_srch_dir}/${dtb_srch}*.dtb -type f 2>/dev/null | wc -l)
 		
 	if [[ ! -f "${K_IMG_PATH}" && "${dtb_comp}" -eq 0 ]];then
 		
@@ -53,14 +60,21 @@ kernel_install() {
 	local DEF_CFG=$6
 	local ROOT_PART=$7
 	local BOOT_PART=${ROOT_PART}/boot
+	local dtb_srch_dir="${kernel_src_dir}/arch/${K_ARCH}/boot/dts/broadcom"
 	local K_IMG_PATH="${kernel_src_dir}/arch/${K_ARCH}/boot/${K_IMG}"
-	local dtb_srch=${DEF_CFG%"_defconfig"}
 	local PROC=$(nproc)
-
-	[[ "${K_ARCH}" == "arm64" ]] && local dtb_srch_dir="${kernel_src_dir}/arch/${K_ARCH}/boot/dts/broadcom"
-	[[ "${K_ARCH}" == "arm" ]] && local dtb_srch_dir="${kernel_src_dir}/arch/${K_ARCH}/boot/dts"
 	
-	dtb_comp=$(find ${dtb_srch_dir}/${DEFCONFIG%"_defconfig"}*.dtb -type f 2>/dev/null | wc -l)
+	if [[ ${DEF_CFG} == "bcmrpi_defconfig" ]];then
+	
+		local dtb_srch={bcm2708,bcm2835}
+	
+	else
+	
+		local dtb_srch=${DEF_CFG%"_defconfig"}
+	
+	fi
+	
+	dtb_comp=$(find ${dtb_srch_dir}/${dtb_srch}*.dtb -type f 2>/dev/null | wc -l)
 	
 	if [[ -f "${K_IMG_PATH}" && "${dtb_comp}" -gt 0 ]];then
 	
@@ -69,21 +83,7 @@ kernel_install() {
 		cd "${kernel_src_dir}"
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_MOD_PATH="${ROOT_PART}" modules_install -j "${PROC}" &> /dev/null
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_DTBS_PATH="${BOOT_PART}" dtbs_install -j "${PROC}" &> /dev/null
-		
-		# I was bored and I don't plan to correct this...
-		if [[ "${K_ARCH}" == "arm64" ]];then 
-		
-			for dtb_comp in $(find "${BOOT_PART}/broadcom" -maxdepth 1 -name "*.dtb")
-			do
-			
-				mv ${dtb_comp} ${BOOT_PART}
-			
-			done
-			
-			rm -rf "${BOOT_PART}/broadcom"
-		
-		fi
-							
+									
 		echo -en "\nKernel has been installed !\n\n"
 	
 	else

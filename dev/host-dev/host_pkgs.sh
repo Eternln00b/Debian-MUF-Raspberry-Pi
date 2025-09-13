@@ -58,7 +58,7 @@ clonedgit_repo() {
 			
 			else
 			
-				if [[ "${kernel_arch}" == "aarch64" && "${url##*/}" == "linux" ]];then
+				if [[ "${url##*/}" == "linux" ]];then
 
 					branch=$(echo -en "${branch_list}\n" | sort -Vu | grep -E '^rpi-[0-9]+\.[0-9]+\.y$' | tail -n1)
 				

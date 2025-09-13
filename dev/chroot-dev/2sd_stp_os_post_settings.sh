@@ -58,17 +58,70 @@ etc_network_interfaces
 chmod 0600 /etc/network/interfaces
 
 # Don't wait forever and a day for the network to come online
-if [ -s /lib/systemd/system/networking.service ]; then
+if [[ -s /lib/systemd/system/networking.service ]]; then
 
-	sed -i -e "s/TimeoutStartSec=5min/TimeoutStartSec=5sec/" /lib/systemd/system/networking.service
+	sed -e 's/TimeoutStartSec=5min/TimeoutStartSec=5sec/' -i /lib/systemd/system/networking.service
+
+fi
+
+if [[ -s /lib/systemd/system/ifup@.service ]]; then
+
+	sed -e '$aTimeoutStopSec=5s' -i /lib/systemd/system/ifup@.service
 
 fi
 
-if [ -s /lib/systemd/system/ifup@.service ]; then
+# /etc/journald.conf 
+/bin/cat /dev/null > /etc/systemd/journald.conf
+/bin/cat <<journald_conf >> /etc/systemd/journald.conf
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it under the
+#  terms of the GNU Lesser General Public License as published by the Free
+#  Software Foundation; either version 2.1 of the License, or (at your option)
+#  any later version.
+#
+# Entries in this file show the compile time defaults. Local configuration
+# should be created by either modifying this file, or by creating "drop-ins" in
+# the journald.conf.d/ subdirectory. The latter is generally recommended.
+# Defaults can be restored by simply deleting this file and all drop-ins.
+#
+# Use 'systemd-analyze cat-config systemd/journald.conf' to display the full config.
+#
+# See journald.conf(5) for details.
 
-	echo "TimeoutStopSec=5s" >> /lib/systemd/system/ifup@.service
+[Journal]
+Storage=volatile
+Compress=yes
+#Seal=yes
+#SplitMode=uid
+#SyncIntervalSec=5m
+#RateLimitIntervalSec=30s
+#RateLimitBurst=10000
+#SystemMaxUse=
+#SystemKeepFree=
+#SystemMaxFileSize=
+#SystemMaxFiles=100
+#RuntimeMaxUse=
+#RuntimeKeepFree=
+#RuntimeMaxFileSize=
+#RuntimeMaxFiles=100
+#MaxRetentionSec=
+#MaxFileSec=1month
+#ForwardToSyslog=yes
+#ForwardToKMsg=no
+#ForwardToConsole=no
+#ForwardToWall=yes
+#TTYPath=/dev/console
+#MaxLevelStore=debug
+#MaxLevelSyslog=debug
+#MaxLevelKMsg=notice
+#MaxLevelConsole=info
+#MaxLevelWall=emerg
+#LineMax=48K
+#ReadKMsg=yes
+#Audit=no
 
-fi
+journald_conf
 
 # cleaning the img
 

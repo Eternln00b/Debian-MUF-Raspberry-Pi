@@ -70,7 +70,7 @@ distro_rootfs() {
 		echo -en "We have to write and compress the root file system ${targz_fpath##*/}\n"
 		echo -en "It's going to take a while...\n\n"
 		
-		if [[ ${distro_id} -ge 13 ]];then 
+		if [[ ${distro_id} -ge 12 ]];then 
 		
 			local id_pkgs="bind9-dnsutils,python-is-python3"
 		
@@ -85,6 +85,7 @@ distro_rootfs() {
 		qemu-img create -f raw "${tmp_img}" 790M > /dev/null
 		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
 		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
+		[[ ${arch} == "arm" ]] && arch="armhf"
 		local LOOPDEVS=$(kpartx -avs "${tmp_img}" | awk '{print $3}')
 		local LOOPROOTFS=/dev/mapper/$(echo ${LOOPDEVS} | awk '{print $1}')
 		mkfs.ext4 ${LOOPROOTFS} >/dev/null 2>&1
@@ -211,6 +212,7 @@ os_build() {
 		
 		echo -en "pboot=Boot\n" | dd conv=notrunc oflag=append of=${dev_vars} >/dev/null 2>&1
 		echo -en "prootfs=Debian\n" | dd conv=notrunc oflag=append of=${dev_vars} >/dev/null 2>&1
+		[[ ${rpi_arch} == "armhf" ]] && rpi_arch="arm"
 		cp $(which qemu-${rpi_arch}-static) ${mnt_rootfs}/usr/bin/
 		
 		for chrt_script in $(find "${dev_scripts}" -maxdepth 1 -name "*.sh" | tac)
