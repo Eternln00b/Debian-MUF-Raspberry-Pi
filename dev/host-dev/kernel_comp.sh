@@ -83,7 +83,21 @@ kernel_install() {
 		cd "${kernel_src_dir}"
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_MOD_PATH="${ROOT_PART}" modules_install -j "${PROC}" &> /dev/null
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_DTBS_PATH="${BOOT_PART}" dtbs_install -j "${PROC}" &> /dev/null
-									
+		
+		# I don't know, I'm bored with this....
+		if [[ "${K_ARCH}" == "arm64" ]];then 
+		
+			for dtb_comp in $(find "${BOOT_PART}/broadcom" -maxdepth 1 -name "*.dtb")
+			do
+			
+				mv ${dtb_comp} ${BOOT_PART}
+			
+			done
+			
+			rm -rf "${BOOT_PART}/broadcom"
+		
+		fi
+		
 		echo -en "\nKernel has been installed !\n\n"
 	
 	else
