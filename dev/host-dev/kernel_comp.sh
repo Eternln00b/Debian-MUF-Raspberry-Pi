@@ -103,7 +103,7 @@ kernel_install() {
 	else
 	
 		echo -en "The kernel looks gone.. ?\n"
-		exit
+		return 1
 	
 	fi
 	

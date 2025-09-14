@@ -40,7 +40,7 @@ finish () {
 	umount -l "${chrootfs}" || true
 	kpartx -dvs ${img_name} >/dev/null 2>&1
 	rm -rf "${chrootfs}" "/tmp/dev-scripts"
-	[[ ${os_build_exec} -ne 0 ]] && rm ${img_name}
+	[[ ${os_build_exec} -ne 0 || ${kernel_install_exec} -ne 0 ]] && rm ${img_name}
 		
 	if [[ ${img_comp} = true && -f ${img_name} ]];then
 
@@ -158,13 +158,14 @@ else
 		
 	trap finish EXIT
 	
-	os_pre_build '80M' '1200M' "${chrootfs}" "${img_name}" "${rootfs_targz}" 
+	os_pre_build '80M' '1160M' "${chrootfs}" "${img_name}" "${rootfs_targz}" 
 	os_build "${arch}" "${chrootfs}" "${img_name}" "${firmw_crep}"
 	os_build_exec=$?
 	
 	if [[ ${os_build_exec} -eq 0 ]];then
 	
 		kernel_install "${kernel_crep}" "${KDEV_ARCH}" "${KERNEL}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${chrootfs}"
+		kernel_install_exec=$?
 	
 	else
 	

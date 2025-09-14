@@ -61,8 +61,8 @@ distro_rootfs() {
 	local console_env='console-data,console-setup-linux,console-setup,locales,tzdata'
 	local dist_env='lsb-base,lsb-release,git,keyboard-configuration,nano,util-linux'
 	local os_env='ifupdown,iw,kmod,sudo,udev,usbutils,perl,psmisc,rsync,dbus,fake-hwclock'
-	local net_env='curl,iproute2,iputils-ping,net-tools,tcpd,wget,openssh-server'
-	local net_dhcp_env='dhcpcd5,isc-dhcp-client,isc-dhcp-common'
+	local net_pa_env='curl,iproute2,iputils-ping,net-tools,tcpd,wget,openssh-server'
+	local net_pb_env='ca-certificates,dhcpcd5,isc-dhcp-client,isc-dhcp-common'
 	local netlib_env='libnl-3-200,libnl-genl-3-200,libnl-route-3-200,libssl-dev'
 		
 	if [[ ! -f ${targz_fpath} ]];then
@@ -80,9 +80,9 @@ distro_rootfs() {
 		
 		fi
 				
-		local pkgs="${console_env},${dist_env},${os_env},${net_env},${net_dhcp_env},${netlib_env},${id_pkgs}"
+		local pkgs="${console_env},${dist_env},${os_env},${net_pa_env},${net_pb_env},${net_dhcp_env},${netlib_env},${id_pkgs}"
 
-		qemu-img create -f raw "${tmp_img}" 790M > /dev/null
+		qemu-img create -f raw "${tmp_img}" 780M > /dev/null
 		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
 		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
 		[[ ${arch} == "arm" ]] && arch="armhf"
