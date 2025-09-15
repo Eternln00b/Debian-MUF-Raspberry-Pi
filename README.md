@@ -1,7 +1,8 @@
 # Debian Made up for Raspberry Pi
 "Debian Made up for Raspberry Pi" is a set of scripts that simplifies and automates the process of building a complete and bootable Debian image for the Raspberry Pi SBCs.
  
-The goal of this project is to build a headless and generic Debian image with the Kernel version of your choice. By default, it uses a recent one. You can configure the kernel if needed.
+The goal of this project is to build a headless and generic Debian image with the Kernel version of your choice. By default, the most recent version is chosen. 
+Also, you can configure the kernel if needed.
  
 All of the Raspberry Pi models should be supported. Concerning Debian, the latest release ( Trixie ) still supports arm architectures, but only for upgrades ( https://www.debian.org/releases/trixie/ ). 
 
