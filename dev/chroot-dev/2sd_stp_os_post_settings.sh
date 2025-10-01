@@ -57,18 +57,22 @@ source-directory /etc/network/interfaces.d
 etc_network_interfaces
 chmod 0600 /etc/network/interfaces
 
-# Don't wait forever and a day for the network to come online ( according to https://gist.github.com/stewdk/f4f36c3f6599072583bd40f15b5cdbef )
-if [[ -s /lib/systemd/system/networking.service ]]; then
+# /etc/default/keyboard
+/bin/cat /dev/null > /etc/default/keyboard
+/bin/cat <<keyboarconf >> /etc/default/keyboard
+# KEYBOARD CONFIGURATION FILE
 
-	sed -e 's/TimeoutStartSec=5min/TimeoutStartSec=5sec/' -i /lib/systemd/system/networking.service
+# Consult the keyboard(5) manual page.
 
-fi
+XKBMODEL="${keyb_variant}"
+XKBLAYOUT="${keyb_layout}"
+XKBVARIANT=""
+XKBOPTIONS=""
 
-if [[ -s /lib/systemd/system/ifup@.service ]]; then
+BACKSPACE="guess"
 
-	sed -e '$aTimeoutStopSec=5s' -i /lib/systemd/system/ifup@.service
-
-fi
+keyboarconf
+dpkg-reconfigure --frontend noninteractive keyboard-configuration
 
 # /etc/journald.conf 
 /bin/cat /dev/null > /etc/systemd/journald.conf
@@ -122,6 +126,19 @@ Compress=yes
 #Audit=no
 
 journald_conf
+
+# Don't wait forever and a day for the network to come online ( according to https://gist.github.com/stewdk/f4f36c3f6599072583bd40f15b5cdbef )
+if [[ -s /lib/systemd/system/networking.service ]]; then
+
+	sed -e 's/TimeoutStartSec=5min/TimeoutStartSec=5sec/' -i /lib/systemd/system/networking.service
+
+fi
+
+if [[ -s /lib/systemd/system/ifup@.service ]]; then
+
+	sed -e '$aTimeoutStopSec=5s' -i /lib/systemd/system/ifup@.service
+
+fi
 
 # cleaning the img
 

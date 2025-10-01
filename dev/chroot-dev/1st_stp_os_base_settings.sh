@@ -2,6 +2,22 @@
 
 set -e 
 
+os_sys_filesp() {
+
+	local sysftp=$1
+
+	if [[ -f ${sysftp} ]];then 
+	
+		truncate -s 0 ${sysftp} >/dev/null 2>&1
+	
+	else
+	
+		touch ${sysftp}
+	
+	fi
+
+}
+
 M_ARCH=$(uname -m)
 VARS_CHROOT=
 
@@ -34,6 +50,21 @@ export -p LC_TELEPHONE="${LANG_CODE}.UTF-8" >/dev/null 2>&1
 export -p LC_NUMERIC="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 export -p LC_MESSAGES="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 export -p LC_TIME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+
+mkdir -p /etc/network
+
+truncate -s 0 /lost+found/* >/dev/null 2>&1
+rm -rf /lost+found
+
+os_sysfiles=('/boot/cmdline.txt' '/boot/config.txt' '/etc/network/interfaces' '/etc/apt/sources.list' '/etc/default/keyboard' '/etc/hostname' '/etc/hosts' '/etc/fstab' 
+'/etc/systemd/journald.conf' '/etc/timezone')
+
+for filep in "${os_sysfiles[@]}"
+do
+
+	os_sys_filesp "${filep}"
+	
+done
 
 devbootfs=$(blkid --label ${pboot} -o value)
 devrootfs=$(blkid --label ${prootfs} -o value)
@@ -71,28 +102,9 @@ sed -e "s|# ${LANG} UTF-8|${LANG} UTF-8|" -i /etc/locale.gen
 locale-gen
 update-locale LANGUAGE=${LANG_CODE} LANG=${LANG} LC_ALL=${LANG}
 
-/bin/cat /dev/null > /etc/default/keyboard
-/bin/cat <<keyboarconf >> /etc/default/keyboard
-# KEYBOARD CONFIGURATION FILE
-
-# Consult the keyboard(5) manual page.
-
-XKBMODEL="${keyb_variant}"
-XKBLAYOUT="${keyb_layout}"
-XKBVARIANT=""
-XKBOPTIONS=""
-
-BACKSPACE="guess"
-
-keyboarconf
-dpkg-reconfigure --frontend noninteractive keyboard-configuration
-
 echo -en "\nTimezone reconfiguration...\n"
-[[ -f /etc/timezone ]] && rm /etc/timezone
 echo "${timezone}" | dd conv=notrunc oflag=append of=/etc/timezone >/dev/null 2>&1
-[[ -f /etc/localtime ]] && rm /etc/localtime 
 ln -sf /usr/share/zoneinfo/"${timezone}" /etc/localtime
-
 dpkg-reconfigure --frontend=noninteractive tzdata >/dev/null 2>&1
 
 # OS update
@@ -163,9 +175,6 @@ else
 	sed -e '29d;30d;31d' -i /boot/config.txt
 
 fi
-
-mkdir -p /etc/network
-rm -rf /etc/{hostname,hosts} /lost+found
 
 # /etc/hostname
 echo "${hostname}" | dd conv=notrunc oflag=append of=/etc/hostname >/dev/null 2>&1
