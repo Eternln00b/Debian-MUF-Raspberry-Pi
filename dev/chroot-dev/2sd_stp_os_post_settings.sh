@@ -57,7 +57,7 @@ source-directory /etc/network/interfaces.d
 etc_network_interfaces
 chmod 0600 /etc/network/interfaces
 
-# Don't wait forever and a day for the network to come online
+# Don't wait forever and a day for the network to come online ( according to https://gist.github.com/stewdk/f4f36c3f6599072583bd40f15b5cdbef )
 if [[ -s /lib/systemd/system/networking.service ]]; then
 
 	sed -e 's/TimeoutStartSec=5min/TimeoutStartSec=5sec/' -i /lib/systemd/system/networking.service
@@ -138,6 +138,7 @@ do
 
 	shred -v -n 1 -z "${i}" >/dev/null 2>&1
 	truncate -s 0 "${i}" >/dev/null 2>&1
+	rm -rf "${i}"
 
 done
 

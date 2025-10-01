@@ -40,14 +40,29 @@ finish () {
 	umount -l "${chrootfs}" || true
 	kpartx -dvs ${img_name} >/dev/null 2>&1
 	rm -rf "${chrootfs}" "/tmp/dev-scripts"
-	[[ ${os_build_exec} -ne 0 || ${kernel_install_exec} -ne 0 ]] && rm ${img_name}
+	
+	if [[ ${os_build_exec} -ne 0 || ${kernel_install_exec} -ne 0 ]];then 
+	
+		rm ${img_name}
 		
-	if [[ ${img_comp} = true && -f ${img_name} ]];then
+	else
 
-		if [[ ! -f ${img_name_c} ]];then
+		chown ${usr_id}:${usr_id} ${img_name}
+		chmod 644 ${img_name}
+		
+		if [[ ! -f ${img_name_c} && ${img_comp} = true ]];then
 		
 			echo -en "The file ${img_name} is gonna be compressed !\n\n"
-			xz -k --best ${img_name}
+			
+			xz -T $(nproc) -k -e --best ${img_name} 
+			local tcomp=$? 
+			
+			if [[ ${tcomp} -ne 0 ]];then
+			
+				echo -en "It's going to take sometimes...\n\n"
+				xz -k --best ${img_name} 
+			
+			fi
 						
 		fi
 
@@ -158,7 +173,7 @@ else
 		
 	trap finish EXIT
 	
-	os_pre_build '80M' '1160M' "${chrootfs}" "${img_name}" "${rootfs_targz}" 
+	os_pre_build '80M' '1150M' "${chrootfs}" "${img_name}" "${rootfs_targz}" 
 	os_build "${arch}" "${chrootfs}" "${img_name}" "${firmw_crep}"
 	os_build_exec=$?
 	
