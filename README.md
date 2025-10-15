@@ -8,6 +8,9 @@ All of the Raspberry Pi models should be supported. Concerning Debian, the lates
 
 It's also possible to build an Ubuntu image but, you will have to dig the code. My project is focused on Debian above all.
 
+update 15.10.2025 : 
+If you need to expand the rootfs, you can follow this guide https://mattheweaton.net/posts/how-to-enlarge-partitions-in-linux. GParted is also a good solution.
+
 usage :
 ```bash
 main.sh -R <RPi Model (RPi5|RPi4|RPi3|RPi2|RPi1)> [opt][-a <arch (aarch64|armhf)> -c <enable kernel conf> -x <enable img compression>]
