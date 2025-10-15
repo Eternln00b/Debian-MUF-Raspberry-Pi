@@ -172,8 +172,9 @@ else
 	pre_cfg_chroot "${APT_URL}" "${APT_URL_SEC}" "${RELEASE}" "${KERNEL}" "${chroot_usr}" "${chroot_scripts}"
 		
 	trap finish EXIT
-	
-	os_pre_build '80M' '1150M' "${chrootfs}" "${img_name}" "${rootfs_targz}" 
+		
+	os_pre_build '70M' '950M' "${chrootfs}" "${img_name}" "${rootfs_targz}"
+		
 	os_build "${arch}" "${chrootfs}" "${img_name}" "${firmw_crep}"
 	os_build_exec=$?
 	

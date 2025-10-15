@@ -1,4 +1,4 @@
 kernel_rep="https://github.com/raspberrypi/linux"
 firmw_rep="https://github.com/raspberrypi/firmware"
-kernel_branch="master"
+kernel_branch="rpi-6.17.y"
 firmw_branch="master"

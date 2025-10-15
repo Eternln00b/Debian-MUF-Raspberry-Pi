@@ -59,9 +59,9 @@ distro_rootfs() {
 	local tmp_rootfs="/tmp/rootfs_deb"
 	local tmp_img="/tmp/rootfs.img"
 	local console_env='console-data,console-setup-linux,console-setup,locales,tzdata'
-	local dist_env='lsb-base,lsb-release,git,keyboard-configuration,nano,util-linux'
+	local dist_env='bash-completion,lsb-base,lsb-release,keyboard-configuration,nano,util-linux'
 	local os_env='ifupdown,iw,kmod,sudo,udev,usbutils,perl,psmisc,rsync,dbus,fake-hwclock'
-	local net_pa_env='curl,iproute2,iputils-ping,net-tools,tcpd,wget,openssh-server'
+	local net_pa_env='iproute2,iputils-ping,tcpd,wget,openssh-server'
 	local net_pb_env='ca-certificates,dhcpcd5,isc-dhcp-client,isc-dhcp-common'
 	local netlib_env='libnl-3-200,libnl-genl-3-200,libnl-route-3-200,libssl-dev'
 		
@@ -74,6 +74,10 @@ distro_rootfs() {
 		
 			local id_pkgs="bind9-dnsutils,python-is-python3"
 		
+		elif [[ ${distro_id} -lt 8 ]];then 
+		
+			local id_pkgs="dnsutils,crda,net-tools,python"
+				
 		else
 		
 			local id_pkgs="dnsutils,crda,python"
@@ -82,7 +86,7 @@ distro_rootfs() {
 				
 		local pkgs="${console_env},${dist_env},${os_env},${net_pa_env},${net_pb_env},${net_dhcp_env},${netlib_env},${id_pkgs}"
 
-		qemu-img create -f raw "${tmp_img}" 780M > /dev/null
+		qemu-img create -f raw "${tmp_img}" 700M > /dev/null
 		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
 		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
 		[[ ${arch} == "arm" ]] && arch="armhf"
@@ -234,7 +238,7 @@ os_build() {
 		if [[ ${exit_code} -eq 0 ]]; then
 
 			truncate -s 0 ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static >/dev/null 2>&1
-			rm ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static
+			unlink ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static
 		
 		fi
 		

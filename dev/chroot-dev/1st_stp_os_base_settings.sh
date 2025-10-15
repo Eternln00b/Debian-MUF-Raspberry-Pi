@@ -2,19 +2,11 @@
 
 set -e 
 
-os_sys_filesp() {
+easy_append() {
 
-	local sysftp=$1
-
-	if [[ -f ${sysftp} ]];then 
-	
-		truncate -s 0 ${sysftp} >/dev/null 2>&1
-	
-	else
-	
-		touch ${sysftp}
-	
-	fi
+	local txt=$1
+	local filetp=$2
+	echo "${txt}" | dd conv=notrunc oflag=append of=${filetp} >/dev/null 2>&1
 
 }
 
@@ -35,7 +27,7 @@ if [[ ! -f ${VARS_CHROOT} ]];then
 
 fi
 
-echo -en "\nWe are in the chroot...\n"
+echo -en "\nWe are in the chroot...\n\n"
 
 source ${VARS_CHROOT}
 export -p LANG="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
@@ -51,79 +43,40 @@ export -p LC_NUMERIC="${LANG_CODE}.UTF-8" >/dev/null 2>&1
 export -p LC_MESSAGES="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 export -p LC_TIME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 
-mkdir -p /etc/network
+devbootfs=$(blkid --label ${pboot} -o value)
+devrootfs=$(blkid --label ${prootfs} -o value)
+bootcmd="dwc_otg.lpm_enable=0 console=ttyAMA0,115200 console=tty1 root=PARTUUID=$(blkid -s PARTUUID -o value ${devrootfs}) rootfstype=ext4 fsck.repair=yes cgroup_enable=memory elevator=deadline rootwait"
 
-truncate -s 0 /lost+found/* >/dev/null 2>&1
-rm -rf /lost+found
+os_sysfilest=('/boot/cmdline.txt' '/boot/config.txt' '/etc/apt/sources.list' '/etc/default/keyboard' '/etc/hostname' '/etc/hosts' '/etc/fstab' '/etc/systemd/journald.conf')
+os_sysfilestxt=('/boot/cmdline.txt' '/etc/hostname' '/etc/timezone')
+os_txt_append=("${bootcmd}" "${hostname}" "${timezone}")
 
-os_sysfiles=('/boot/cmdline.txt' '/boot/config.txt' '/etc/network/interfaces' '/etc/apt/sources.list' '/etc/default/keyboard' '/etc/hostname' '/etc/hosts' '/etc/fstab' 
-'/etc/systemd/journald.conf' '/etc/timezone')
-
-for filep in "${os_sysfiles[@]}"
+for filep in "${os_sysfilest[@]}"
 do
 
-	os_sys_filesp "${filep}"
+	[[ -f ${filep} ]] && truncate -s 0 ${filep} >/dev/null 2>&1
 	
 done
 
-devbootfs=$(blkid --label ${pboot} -o value)
-devrootfs=$(blkid --label ${prootfs} -o value)
+while read -r txt_apnd <&3 && read -r files_to_apnd <&4
+do
 
-/bin/cat /dev/null > /etc/fstab
-/bin/cat <<os_mnts >> /etc/fstab
-proc            /proc           proc    defaults          0       0
-PARTUUID=$(blkid -s PARTUUID -o value ${devbootfs})  /boot/firmware  vfat    defaults          0       2
-PARTUUID=$(blkid -s PARTUUID -o value ${devrootfs})  /               ext4    defaults,noatime  0       1
+	easy_append "${txt_apnd}" "${files_to_apnd}"
 
-os_mnts
-
-/bin/cat /dev/null > /etc/apt/sources.list
-/bin/cat <<etc_apt_sources_list >> /etc/apt/sources.list
-# See https://wiki.debian.org/SourcesList for more information.
-deb ${APT_URL} ${RELEASE} main non-free-firmware
-deb-src ${APT_URL} ${RELEASE} main non-free-firmware
-
-deb ${APT_URL} ${RELEASE}-updates main non-free-firmware
-deb-src ${APT_URL} ${RELEASE}-updates main non-free-firmware
-
-deb ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
-deb-src ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
-
-# Backports allow you to install newer versions of software made available for this release
-deb ${APT_URL} ${RELEASE}-backports main non-free-firmware
-deb-src ${APT_URL} ${RELEASE}-backports main non-free-firmware
-
-etc_apt_sources_list
-
-echo -en "/etc/apt/sources.list init...\n\n" 		
-apt -y update -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1     	
+done 3< <(printf "%s\n" "${os_txt_append[@]}") 4< <(printf "%s\n" "${os_sysfilestxt[@]}")
 
 sed -e "s|# ${LANG} UTF-8|${LANG} UTF-8|" -i /etc/locale.gen
 locale-gen
 update-locale LANGUAGE=${LANG_CODE} LANG=${LANG} LC_ALL=${LANG}
 
-echo -en "\nTimezone reconfiguration...\n"
-echo "${timezone}" | dd conv=notrunc oflag=append of=/etc/timezone >/dev/null 2>&1
 ln -sf /usr/share/zoneinfo/"${timezone}" /etc/localtime
 dpkg-reconfigure --frontend=noninteractive tzdata >/dev/null 2>&1
+echo -en "\nThe Timezone has been set...\n"
 
-# OS update
-echo -en "We are updating the OS...\n"
-apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 "bash-completion" >/dev/null 2>&1
-apt -y update -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
-apt -y upgrade -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
-
-# User settings 
-echo -en "adding the sudo user : ${user}\n"
+echo -en "\nadding the sudo user : ${user}\n"
 useradd -s /bin/bash -G sudo,adm,netdev,www-data -m "${user}"
 echo "${user}:${password}" | chpasswd
-sed -e 's/#force_color_prompt=yes/force_color_prompt=yes/g' -i "${bashrc_usr}"
-
-/bin/cat /dev/null > /boot/cmdline.txt
-/bin/cat <<bootcmdtxt >> /boot/cmdline.txt
-dwc_otg.lpm_enable=0 console=ttyAMA0,115200 console=tty1 root=PARTUUID=$(blkid -s PARTUUID -o value ${devrootfs}) rootfstype=ext4 fsck.repair=yes cgroup_enable=memory elevator=deadline rootwait
-
-bootcmdtxt
+sed -e 's|#force_color_prompt=yes|force_color_prompt=yes|g' -i "${bashrc_usr}"
 
 /bin/cat /dev/null > /boot/config.txt
 /bin/cat <<bootconfigtxt >> /boot/config.txt
@@ -176,5 +129,46 @@ else
 
 fi
 
-# /etc/hostname
-echo "${hostname}" | dd conv=notrunc oflag=append of=/etc/hostname >/dev/null 2>&1
+/bin/cat /dev/null > /etc/fstab
+/bin/cat <<os_mnts >> /etc/fstab
+proc            /proc           proc    defaults          0       0
+PARTUUID=$(blkid -s PARTUUID -o value ${devbootfs})  /boot/firmware  vfat    defaults          0       2
+PARTUUID=$(blkid -s PARTUUID -o value ${devrootfs})  /               ext4    defaults,noatime  0       1
+
+os_mnts
+
+/bin/cat /dev/null > /etc/apt/sources.list
+/bin/cat <<etc_apt_sources_list >> /etc/apt/sources.list
+# See https://wiki.debian.org/SourcesList for more information.
+deb ${APT_URL} ${RELEASE} main non-free-firmware
+deb-src ${APT_URL} ${RELEASE} main non-free-firmware
+
+deb ${APT_URL} ${RELEASE}-updates main non-free-firmware
+deb-src ${APT_URL} ${RELEASE}-updates main non-free-firmware
+
+deb ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
+deb-src ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
+
+# Backports allow you to install newer versions of software made available for this release
+deb ${APT_URL} ${RELEASE}-backports main non-free-firmware
+deb-src ${APT_URL} ${RELEASE}-backports main non-free-firmware
+
+etc_apt_sources_list
+
+echo -en "\nWe are installing the /etc/apt/sources.list...\n" 		
+
+apt update -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+apt clean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+apt autoclean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+apt autoremove -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+
+tmpfsch=$(find /var/log -type f)
+for i in $tmpfsch
+do
+
+	shred -v -n 1 -z "${i}" >/dev/null 2>&1
+	truncate -s 0 "${i}" >/dev/null 2>&1
+
+done
+
+apt upgrade -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1

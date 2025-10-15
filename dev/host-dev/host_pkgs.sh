@@ -58,7 +58,7 @@ clonedgit_repo() {
 			
 			else
 			
-				if [[ "${url##*/}" == "linux" ]];then
+				if [[ "${url##*/}" == "linux" && ${branch} == "master" ]];then
 
 					branch=$(echo -en "${branch_list}\n" | sort -Vu | grep -E '^rpi-[0-9]+\.[0-9]+\.y$' | tail -n1)
 				
@@ -71,8 +71,8 @@ clonedgit_repo() {
 					local msg_notif="We are cloning the repository ${url}"
 					
 					if [[ ${branch} != "master" ]];then
-					
-						[[ "${kernel_arch}" == "aarch64" ]] && echo -en "We are better off to change the branch for this repo ${url}.\n"
+
+						[[ "${url##*/}" == "linux" ]] && echo -en "We are better off to change the branch for this repo ${url}.\n"
 						echo -en "${msg_notif}. The selected branch is ${branch}\n"
 								
 					else
