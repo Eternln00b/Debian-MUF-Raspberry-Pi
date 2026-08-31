@@ -45,5 +45,4 @@ main.sh -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -x]
 ![Screenshot](./stock/img/screenshots/rpi4_ssh.jpg)
 
 - Debian Trixie on Raspberry Pi 2
-
 ![Screenshot](./stock/img/screenshots/rpi2_ssh.jpg)
