@@ -42,3 +42,4 @@ main.sh -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -x]
 ```
 examples of installations :
 ![Screenshot](./stock/img/screenshots/rpi4_ssh.jpg)
+![Screenshot](./stock/img/screenshots/rpi2_ssh.jpg)
