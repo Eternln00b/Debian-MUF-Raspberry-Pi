@@ -1,6 +1,7 @@
 # Debian Made up for Raspberry Pi
 
-<img src="stock/img/logo/rpi_debian.jpg" align="right" width="370">
+<img align="right" width="370" height="370" src="stock/img/logo/rpi_debian.jpg">
+
 The project is a set of scripts that simplifies and automates the process of building a complete and bootable Debian image for the Raspberry Pi SBCs. 
 The goal is to build a headless and generic Debian image with the Kernel version of your choice. 
 By default, the most recent version is chosen. Also, you can configure the kernel if needed.
