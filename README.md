@@ -8,6 +8,7 @@ The goal is to build a headless and generic Debian image with the Kernel version
 By default, the most recent version is chosen. Also, you can configure the kernel if needed.
 
 It should also possible to build an Ubuntu image but, you will have to dig the code.
+I could maybe change this in the future.
 
 <br clear="right">
 
