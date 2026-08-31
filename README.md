@@ -7,7 +7,7 @@ The project is a set of scripts that simplifies and automates the process of bui
 The goal is to build a headless and generic Debian image with the Kernel version of your choice. 
 By default, the most recent version is chosen. Also, you can configure the kernel if needed.
 
-It should also possible to build an Ubuntu image but, you will have to dig the code.
+It should be also possible to build an Ubuntu image. However you will have to dig the code.
 I could maybe change this in the future.
 
 <br clear="right">
