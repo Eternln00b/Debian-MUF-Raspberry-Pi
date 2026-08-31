@@ -9,6 +9,7 @@ It should also possible to build an Ubuntu image but, you will have to dig the c
 
 <br clear="right">
 
+
 update 15.10.2025 : 
 If you need to expand the rootfs, you can follow this guide https://mattheweaton.net/posts/how-to-enlarge-partitions-in-linux. GParted is also a good solution.
 
