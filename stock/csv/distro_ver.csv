@@ -1,0 +1,2 @@
+DIST,RELEASE,ID,APT_URL,ARCHIVE_KEY,APT_URL_SEC
+debian,trixie,13,http://deb.debian.org/debian,https://ftp-master.debian.org/keys/archive-key,http://security.debian.org/debian-security/

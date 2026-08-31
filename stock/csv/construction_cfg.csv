@@ -1,0 +1,6 @@
+ID,ARCH,KDEV_ARCH,DEFCONFIG,KERNEL_IMG,KERNEL,CC_COMPILER,chrootfs
+1,armhf,arm,bcmrpi_defconfig,zImage,kernel,arm-linux-gnueabihf-,/mnt/alt-raspbian
+2,armhf,arm,bcm2709_defconfig,zImage,kernel7,arm-linux-gnueabihf-,/mnt/alt-raspbian
+3,armhf,arm,bcm2711_defconfig,zImage,kernel7l,arm-linux-gnueabihf-,/mnt/alt-raspbian
+4,aarch64,arm64,bcm2711_defconfig,Image,kernel8,aarch64-linux-gnu-,/mnt/alt-raspbian
+5,aarch64,arm64,bcm2712_defconfig,Image,kernel_2712,aarch64-linux-gnu-,/mnt/alt-raspbian

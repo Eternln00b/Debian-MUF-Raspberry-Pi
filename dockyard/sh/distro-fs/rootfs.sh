@@ -1,51 +1,5 @@
 #!/bin/bash
 
-distro_keyring() {
-
-	local apt_url=$1
-	local sec_url=$2
-	local asc_url=$3
-	local rel=$4
-	local gpg_k=$5
-	local urls_list=("${apt_url}" "${sec_url}" "${asc_url}")
-	local apt_url_dist="${apt_url}/dists"
-	
-	if [[ -z "${apt_url}" && -z "${sec_url}" && -z "${asc_url}" && -z "${rel}" ]];then
-
-		echo -en "[!] There's maybe an issue with your distribution configuration...\n"
-		exit
-	
-	else
-	
-		for url_chck in "${urls_list[@]}"
-		do
-
-			if [[ $(curl -A "Mozilla/5.0" -Lfs "${url_chck}" -o /dev/null; echo $?) -ne 0 ]];then
-		
-				echo -en "[!] The url ${url_chck} looks wrong...\n"
-				exit
-		
-			fi
-	
-		done
-			
-		if [[ ! $(curl -A "Mozilla/5.0" -Lfs "${apt_url_dist}" | awk '/\y'${rel}'\y/') ]];then
-		
-			echo -en "[!] The release ${rel} likely doesn't exist...\n"
-			exit
-			
-		fi
-		
-		if [[ ! -f ${gpg_k} ]];then
-			
-			wget "${asc_url}" -qO- | gpg --import --no-default-keyring --keyring "${gpg_k}" >/dev/null 2>&1
-			
-		fi
-				
-	fi
-
-}
-
 distro_rootfs() {
 
 	local apt_url=$1
@@ -84,7 +38,7 @@ distro_rootfs() {
 		
 		fi
 				
-		local pkgs="${console_env},${dist_env},${os_env},${net_pa_env},${net_pb_env},${net_dhcp_env},${netlib_env},${id_pkgs}"
+		local pkgs="${console_env},${dist_env},${os_env},${net_pa_env},${net_pb_env},${netlib_env},${id_pkgs}"
 
 		qemu-img create -f raw "${tmp_img}" 700M > /dev/null
 		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
@@ -129,7 +83,8 @@ os_pre_build() {
 	local mnt_bootfs=${mnt_rootfs}/boot
 	local mnt_dirs=("proc" "dev" "dev/pts" "sys" "tmp")
 
-	echo -en "We are Building the Debian OS !\n"
+	[[ ! -d ${mnt_rootfs} ]] && mkdir -p ${mnt_rootfs}
+	echo -en "We are going to build the Debian OS !\n"
 
 	qemu-img create -f raw ${img_name} ${img_size} > /dev/null 
 	(echo "n"; echo "p"; echo "1"; echo "2048"; echo "+${boot_size}"; echo "n"; echo "p"; echo "2"; echo ""; echo ""; 
@@ -174,14 +129,13 @@ os_build() {
 
 	local rpi_arch=$1
 	local mnt_rootfs=$2
-	local img_name=$3
-	local firmware_dir=$4
+	local firmware_dir=$3
+	local dev_scripts=$4
+	local dev_vars=$5
 	local firmware_precomp="${firmware_dir}/boot"
 	local mnt_bootfs=${mnt_rootfs}/boot
 	local mnt_chck=$(awk '/\57dev\57mapper\57loop[0-99]/' /proc/mounts | wc -l)
-	local dev_scripts="/tmp/dev-scripts"
-	local dev_vars="/tmp/dev-scripts/src_vars"
-	
+		
 	if [[ ${mnt_chck} -ne 2 ]];then
 	
 		echo -en "The loop device isn't mounted...\n"
@@ -219,10 +173,9 @@ os_build() {
 		[[ ${rpi_arch} == "armhf" ]] && rpi_arch="arm"
 		cp $(which qemu-${rpi_arch}-static) ${mnt_rootfs}/usr/bin/
 		
-		for chrt_script in $(find "${dev_scripts}" -maxdepth 1 -name "*.sh" | tac)
+		for chrt_script in $(find "${dev_scripts}" -maxdepth 1 -name "*.sh" | sort -V)
 		do
 	
-			chmod +x "${chrt_script}"
 			chroot "${mnt_rootfs}" "${chrt_script}"
 			exit_code=$?
 		
@@ -234,7 +187,9 @@ os_build() {
 			fi
 	
 		done
-
+		
+		rm -rf "${dev_scripts}" "${dev_vars}"
+		
 		if [[ ${exit_code} -eq 0 ]]; then
 
 			truncate -s 0 ${mnt_rootfs}/usr/bin/qemu-${rpi_arch}-static >/dev/null 2>&1

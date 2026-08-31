@@ -1,0 +1,5 @@
+tmp_lst_cr="/tmp/cloned_lst"
+works_lfh="/tmp/dockyard_env"
+works_lfc="/tmp/dockyard_envc"
+chroot_sdir="/tmp/scripts_c"
+dist_setup="/tmp/debian_ver"
