@@ -1,12 +1,21 @@
 # Debian Made up for Raspberry Pi
 
-<img align="right" width="370" height="370" src="stock/img/logo/rpi_debian.jpg">
+<table>
+<tr>
+<td valign="top">
 
-This project is a set of scripts that simplifies and automates the process of building a complete and bootable Debian image for the Raspberry Pi SBCs.
+"Debian Made up for Raspberry Pi" is a set of scripts that simplifies and automates the process of building a complete and bootable Debian image for the Raspberry Pi SBCs.
 The goal of this project is to build a headless and generic Debian image with the Kernel version of your choice. By default, the most recent version is chosen.
 Also, you can configure the kernel if needed.
 
-It should also possible to build an Ubuntu image but, you will have to dig the code. My project is focused on Debian above all. Maybe, I could change this in the future.
+It's also possible to build an Ubuntu image but, you will have to dig the code. My project is focused on Debian above all.
+
+</td>
+<td valign="top" width="160">
+<img src="stock/img/logo/rpi_debian.jpg" width="160">
+</td>
+</tr>
+</table>
 
 update 15.10.2025 : 
 If you need to expand the rootfs, you can follow this guide https://mattheweaton.net/posts/how-to-enlarge-partitions-in-linux. GParted is also a good solution.
