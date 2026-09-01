@@ -1,3 +1,3 @@
 branch,url
-rpi-7.2.y,https://github.com/raspberrypi/linux
+rpi-6.18.y,https://github.com/raspberrypi/linux
 master,https://github.com/raspberrypi/firmware
