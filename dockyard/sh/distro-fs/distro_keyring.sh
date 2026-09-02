@@ -15,7 +15,7 @@ distro_import_key() {
 
 		if [[ ! -f "${keyf}" && "${distribution}" == "debian" ]];then
 
-                        curl -fsSL ${archv_k} | gpg --import --no-default-keyring --keyring "${keyf}" >/dev/null 2>&1
+            curl -fsSL ${archv_k} | gpg --import --no-default-keyring --keyring "${keyf}" >/dev/null 2>&1
 			keyf_d=$?
 
 			if [[ ${keyf_d} -ne 0 ]];then
