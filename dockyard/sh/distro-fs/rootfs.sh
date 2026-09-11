@@ -24,7 +24,11 @@ distro_rootfs() {
 		echo -en "We have to write and compress the root file system ${targz_fpath##*/}\n"
 		echo -en "It's going to take a while...\n\n"
 		
-		if [[ ${distro_id} -ge 12 ]];then 
+		if [[ ${distro_id} -ge 11 ]];then
+		
+			local id_pkgs="debian-keyring debian-archive-keyring"
+		
+		elif [[ ${distro_id} -ge 12 ]];then 
 		
 			local id_pkgs="bind9-dnsutils,python-is-python3"
 		

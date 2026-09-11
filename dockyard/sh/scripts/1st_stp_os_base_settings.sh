@@ -141,21 +141,40 @@ os_mnts
 /bin/cat <<etc_apt_sources_list >> /etc/apt/sources.list
 # See https://wiki.debian.org/SourcesList for more information.
 deb ${APT_URL} ${RELEASE} main non-free-firmware
-deb-src ${APT_URL} ${RELEASE} main non-free-firmware
+#deb-src ${APT_URL} ${RELEASE} main non-free-firmware
 
 deb ${APT_URL} ${RELEASE}-updates main non-free-firmware
-deb-src ${APT_URL} ${RELEASE}-updates main non-free-firmware
+#deb-src ${APT_URL} ${RELEASE}-updates main non-free-firmware
 
 deb ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
-deb-src ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
+#deb-src ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
 
 # Backports allow you to install newer versions of software made available for this release
-deb ${APT_URL} ${RELEASE}-backports main non-free-firmware
-deb-src ${APT_URL} ${RELEASE}-backports main non-free-firmware
+#deb ${APT_URL} ${RELEASE}-backports main non-free-firmware
+#deb-src ${APT_URL} ${RELEASE}-backports main non-free-firmware
 
 etc_apt_sources_list
 
 echo -en "\nWe are installing the /etc/apt/sources.list...\n" 		
+
+if [[ ${ID} -ge 11 ]];then
+
+	movedf="/etc/apt/sources.list.d/moved-from-main.sources"
+	
+	echo "I'm modernizing the sources.list..."
+	apt modernize-sources -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+	
+	if [[ -f ${movedf} ]];then 
+	
+		sed -e 's|Signed-By:|Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg|' -i ${movedf}
+
+	else
+	
+		echo -en "I don't have the will to fix this for the moment...\n"
+
+	fi
+
+fi
 
 apt update -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 apt clean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1

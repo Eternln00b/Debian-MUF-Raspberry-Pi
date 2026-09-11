@@ -7,7 +7,7 @@ import sys
 import argparse
 from pathlib import Path
 
-def build_env_tw(chroot_cfg,outf,apt_url,secp_url,rel,kernel_name):
+def build_env_tw(chroot_cfg,outf,apt_url,secp_url,ID,rel,kernel_name):
     try:
         if os.path.exists(f"{outf}"):
             os.remove(f"{outf}")
@@ -21,6 +21,7 @@ def build_env_tw(chroot_cfg,outf,apt_url,secp_url,rel,kernel_name):
         sh_vars = [
             f'APT_URL="{apt_url}"',
             f'APT_URL_SEC="{secp_url}"',
+            f'ID="{ID}"',
             f'RELEASE="{rel}"',
             f'RPi_kernel="{kernel_name}"'
         ]
@@ -47,6 +48,8 @@ def main():
                        help='The apt repo url to use')
     pargv.add_argument('--urlsec', required=True,
                        help='The security provider url to use')
+    pargv.add_argument('--distID', required=True,
+                       help='The distribution ID')
     pargv.add_argument('--release', required=True,
                        help='The distribution release name to use')
     pargv.add_argument('--kerneln', required=True,
@@ -54,7 +57,7 @@ def main():
     
     argv = pargv.parse_args()
     build_env_tw(argv.usrchroots,argv.shellvarsf,argv.apturl,
-                 argv.urlsec,argv.release,argv.kerneln)
+                 argv.urlsec,argv.distID,argv.release,argv.kerneln)
 
 if __name__ == "__main__":
     main()

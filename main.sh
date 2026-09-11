@@ -33,8 +33,9 @@ usage() {
     echo -en "[-a] cpu architecture : armhf -> 32-bit architecture\n"
     echo -en "                        aarch64 -> 64-bit architecture\n\n"
     echo -en "[-k] this switch allows the kernel configuration.\n\n"
+    echo -en "[-u] this switch update the package management system.\n\n"
     echo -en "[-x] this switch compress the image file.\n\n"
-    echo -en "usage: $(basename "$0") -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -x]\n"
+    echo -en "usage: $(basename "$0") -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -u -x]\n"
     echo
     exit
 
@@ -84,7 +85,7 @@ declare arch
 declare Kernel_Ver 
 declare Kernel_cfg
 
-while getopts ":R:a:c:kx" opt; do
+while getopts ":R:a:c:kux" opt; do
     case ${opt} in
         R)
             rpi_model="$OPTARG"
@@ -100,6 +101,10 @@ while getopts ":R:a:c:kx" opt; do
             
         k)
             Kernel_cfg=true
+            ;;
+        
+        u)
+            apt_update=true
             ;;
             
         x)
@@ -190,8 +195,9 @@ else
     
     [[ -n "${to_rm}" ]] && usage_clear_m
     [[ -z ${Kernel_cfg} ]] && Kernel_cfg=false
+    [[ -z ${apt_update} ]] && apt_update=false
     
-    apt_pkgs_chck
+    apt_pkgs_chck ${apt_update}
     py_mod_chck
 
     py_funct_init "${WORKS}/py"
@@ -210,7 +216,7 @@ else
     source "${works_lfh}"
     
     works_chroot_layout.py --usrchroots "${chroot_usr}" --shellvarsf "${works_lfc}" --apturl "${APT_URL}" --urlsec "${APT_URL_SEC}" \
-                           --release "${RELEASE}" --kerneln "${KERNEL}"
+                           --distID "${ID}" --release "${RELEASE}" --kerneln "${KERNEL}"
 
     chroot_scripts_cfg "${chroot_scripts}" "${chroot_sdir}" "${works_lfc}"
     chroot_cfg_check=$?
