@@ -36,9 +36,14 @@ usage :
 
 [-k] this switch allows the kernel configuration.
 
+[-u] this switch update the package management system.
+
 [-x] this switch compress the image file.
 
-main.sh -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -x]
+usage: main.sh -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -u -x]
+
+Note: You can only build an image as sudo !
+
 ```
 examples of installations :
 ![Screenshot](./stock/img/screenshots/rpi4_ssh.jpg)

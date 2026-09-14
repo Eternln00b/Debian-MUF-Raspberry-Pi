@@ -35,7 +35,8 @@ usage() {
     echo -en "[-k] this switch allows the kernel configuration.\n\n"
     echo -en "[-u] this switch update the package management system.\n\n"
     echo -en "[-x] this switch compress the image file.\n\n"
-    echo -en "usage: $(basename "$0") -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -u -x]\n"
+    echo -en "usage: $(basename "$0") -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -u -x]\n\n"
+    echo -en 'Note: You can only build an image as sudo !\n'
     echo
     exit
 
@@ -159,9 +160,8 @@ if [[ $(id -u) -ne 0 ]]; then
     
     else
         
-        echo '[!] You can only build an image as sudo.'    
-        exit
-        
+        usage  
+                
     fi
          
 elif [[ ! -x $(command -v curl) || $(curl -Lfs guthib.com -o /dev/null; echo $?) -ne 0 ]];then
