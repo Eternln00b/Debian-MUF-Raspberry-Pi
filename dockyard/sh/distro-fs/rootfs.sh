@@ -73,8 +73,22 @@ distro_rootfs() {
 	local targz_fpath=$8
 	local tmp_rootfs="/tmp/rootfs_deb"
 	local tmp_img="/tmp/rootfs.img"
-			
-	if [[ ! -f ${targz_fpath} ]];then
+	
+    for r in $(find "${targz_fpath%/*}" -maxdepth 1 -type f -name '*.tar.gz')
+    do
+	
+		if [[  "$(basename "$r")" == "$(basename "${targz_fpath}")" ]]; then 
+		
+			targz_rootfs=true
+			break
+				
+		fi
+	
+    done
+	
+	[[ -z ${targz_rootfs} ]] && targz_rootfs=false
+		
+	if [[ "${targz_rootfs}" = false ]];then
 		
 		echo -en "We have to write and compress the root file system ${targz_fpath##*/}\n"
 		echo -en "It's going to take a while...\n\n"
