@@ -1,5 +1,66 @@
 #!/bin/bash
 
+deb_pkg_listing() {
+
+	local distro_ID=$1
+	local deb_basef=$2
+	local deb_projectf=$3
+	
+	if [[ -z ${distro_ID} ]];then
+	
+		echo -en "I need the Debian ID in order to continue...\n\n"
+		return 1
+	
+	elif [[ -z ${deb_basef} || ! -f ${deb_basef} ]];then
+	
+		echo -en "I need the base packages list in order to continue...\n\n"
+		return 1
+		
+	else
+	
+		local pkgs_lst=$(grep '^[^@#]' ${deb_basef} | sed -z 's/\n/,/g;s/.$//')
+		
+		if [[ -n ${deb_projectf} && -f ${deb_projectf} ]];then
+		
+			local pkgs_project=$(sed -z 's/\n/,/g;s/.$//' ${deb_projectf})
+		
+		fi
+		
+		if [[ ${distro_ID} -lt 12 ]];then
+		
+			fpkgs_list="${pkgs_lst},net-tools,dnsutils,crda,python"
+		
+		else
+
+			local mdeb_kpkg="bind9-dnsutils,debian-keyring,debian-archive-keyring,iproute2"
+			
+			if [[ ${distro_ID} -gt 12 ]];then
+			
+				fpkgs_list="${mdeb_kpkg},python-is-python3,${pkgs_lst}"
+			
+			else
+			
+				fpkgs_list="${mdeb_kpkg},${pkgs_lst}"	
+			
+			fi
+			
+		fi
+		
+		if [[ -n ${pkgs_project} ]];then
+		
+			local afpkgs_lst="${pkgs_project},${fpkgs_list}"
+			echo ${afpkgs_lst}
+		
+		else
+		
+			echo ${fpkgs_list}
+		
+		fi
+		
+	fi
+	
+}
+
 distro_rootfs() {
 
 	local apt_url=$1
@@ -8,43 +69,26 @@ distro_rootfs() {
 	local distro=$4
 	local distro_id=$5
 	local arch=$6
-	local targz_fpath=$7
-	local u_id=$8
+	local os_inst_pkgs=$7
+	local targz_fpath=$8
 	local tmp_rootfs="/tmp/rootfs_deb"
 	local tmp_img="/tmp/rootfs.img"
-	local console_env='console-data,console-setup-linux,console-setup,locales,tzdata'
-	local dist_env='bash-completion,lsb-base,lsb-release,keyboard-configuration,nano,util-linux'
-	local os_env='ifupdown,iw,kmod,sudo,udev,usbutils,perl,psmisc,rsync,dbus,fake-hwclock'
-	local net_pa_env='iproute2,iputils-ping,tcpd,wget,openssh-server'
-	local net_pb_env='ca-certificates,dhcpcd5,isc-dhcp-client,isc-dhcp-common'
-	local netlib_env='libnl-3-200,libnl-genl-3-200,libnl-route-3-200,libssl-dev'
-		
+			
 	if [[ ! -f ${targz_fpath} ]];then
 		
 		echo -en "We have to write and compress the root file system ${targz_fpath##*/}\n"
 		echo -en "It's going to take a while...\n\n"
 		
-		if [[ ${distro_id} -ge 11 ]];then
+		if [[ ${distro_id} -ge 12 ]];then
 		
-			local id_pkgs="debian-keyring debian-archive-keyring"
+			qemu-img create -f raw "${tmp_img}" 750M > /dev/null
 		
-		elif [[ ${distro_id} -ge 12 ]];then 
-		
-			local id_pkgs="bind9-dnsutils,python-is-python3"
-		
-		elif [[ ${distro_id} -lt 8 ]];then 
-		
-			local id_pkgs="dnsutils,crda,net-tools,python"
-				
 		else
 		
-			local id_pkgs="dnsutils,crda,python"
+			qemu-img create -f raw "${tmp_img}" 700M > /dev/null
 		
 		fi
-				
-		local pkgs="${console_env},${dist_env},${os_env},${net_pa_env},${net_pb_env},${netlib_env},${id_pkgs}"
-
-		qemu-img create -f raw "${tmp_img}" 700M > /dev/null
+		
 		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
 		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
 		[[ ${arch} == "arm" ]] && arch="armhf"
@@ -52,7 +96,7 @@ distro_rootfs() {
 		local LOOPROOTFS=/dev/mapper/$(echo ${LOOPDEVS} | awk '{print $1}')
 		mkfs.ext4 ${LOOPROOTFS} >/dev/null 2>&1
 		mount ${LOOPROOTFS} ${tmp_rootfs}
-		debootstrap --keyring="${keyr}" --include=ca-certificates --include="${pkgs}" --arch="${arch}" "${rel}" "${tmp_rootfs}" "${apt_url}/" >/dev/null 2>&1
+		debootstrap --keyring="${keyr}" --include=ca-certificates --include="${os_inst_pkgs}" --arch="${arch}" "${rel}" "${tmp_rootfs}" "${apt_url}/" >/dev/null 2>&1
 		local exit_code_deb=$?
 		
 		if [[ ${exit_code_deb} -ne 0 ]]; then

@@ -15,6 +15,7 @@ csv_fd="${ITEMS}/csv"
 source $WORKS/sh/distro-fs/rootfs.sh
 source $WORKS/sh/distro-fs/distro_keyring.sh
 source $WORKS/sh/host-setup/debian_img.sh
+source $WORKS/sh/host-setup/projects_items_mgnt.sh
 source $WORKS/sh/host-setup/py_scripts_init.sh
 source $WORKS/sh/host-setup/rpi_selection.sh
 source $WORKS/sh/host-tools/host_pkgs.sh
@@ -67,7 +68,7 @@ finish() {
     kpartx -dvs ${img_name} >/dev/null 2>&1
     rm -rf "${chrootfs}"
     py_scripts_clr
-    [[ "$(stat -c "%U:%G" ${project_itmd})" == "root:root" ]] && chown -R ${usr_id}:${usr_id} ${project_itmd}	
+    raccess_items ${project_itmd} ${usr_id}
         
     if [[ ${os_build_exec} -ne 0 || ${kernel_install_exec} -ne 0 ]];then 
         
@@ -225,11 +226,15 @@ else
     distro_import_key "${DIST}" "${KEY_FILE}" "${ARCHIVE_KEY}"
     keyring_check=$?
     [[ ${keyring_check} -ne 0 ]] && exit
-        
-    trap finish EXIT	
-		
+    
+    distro_all_pkg=$(deb_pkg_listing "${ID}" "${ITEMS}/distro/debian_os_pkgs.lst")
+    deb_pkg_chck=$?
+    [[ ${deb_pkg_chck} -ne 0 ]] && exit
+    
+    trap finish EXIT
+	
     kernel_comp "${linux_crep}" "${KDEV_ARCH}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${Kernel_cfg}"
-    distro_rootfs "${APT_URL}" "${RELEASE}" "${KEY_FILE}" "${DIST}" "${ID}" "${KDEV_ARCH}" "${rootfs_targz}"
+    distro_rootfs "${APT_URL}" "${RELEASE}" "${KEY_FILE}" "${DIST}" "${ID}" "${KDEV_ARCH}" "${distro_all_pkg}" "${rootfs_targz}"
     
     os_pre_build '70M' '970M' "${chrootfs}" "${img_name}" "${rootfs_targz}"
     

@@ -157,7 +157,7 @@ etc_apt_sources_list
 
 echo -en "\nWe are installing the /etc/apt/sources.list...\n" 		
 
-if [[ ${ID} -ge 11 ]];then
+if [[ ${ID} -ge 13 ]];then
 
 	movedf="/etc/apt/sources.list.d/moved-from-main.sources"
 	
