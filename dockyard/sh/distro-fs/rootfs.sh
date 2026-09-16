@@ -22,7 +22,7 @@ deb_pkg_listing() {
 		
 		if [[ -n ${deb_projectf} && -f ${deb_projectf} ]];then
 		
-			local pkgs_project=$(sed -z 's/\n/,/g;s/.$//' ${deb_projectf})
+			local pkgs_project=$(sed -z 's/\n/,/g' ${deb_projectf})
 		
 		fi
 		
@@ -142,11 +142,12 @@ os_pre_build() {
 	local mnt_rootfs=$3
 	local img_name=$4
 	local targz_rootfs=$5
+	local dist_name=$6
 	local mnt_bootfs=${mnt_rootfs}/boot
 	local mnt_dirs=("proc" "dev" "dev/pts" "sys" "tmp")
 
 	[[ ! -d ${mnt_rootfs} ]] && mkdir -p ${mnt_rootfs}
-	echo -en "We are going to build the Debian OS !\n"
+	echo -en "We are going to build the Debian ${dist_name} OS image !\n"
 
 	qemu-img create -f raw ${img_name} ${img_size} > /dev/null 
 	(echo "n"; echo "p"; echo "1"; echo "2048"; echo "+${boot_size}"; echo "n"; echo "p"; echo "2"; echo ""; echo ""; 

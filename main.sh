@@ -29,7 +29,7 @@ usage() {
     
     echo -en "\n[-R] Raspberry pi models : ${rpiml}\n\n"
     echo -en "[-c] item(s) to remove : all -> Deletes the root file system image and the repos.\n"
-    echo -en "                         rootfs -> Deletes only the root file system image.\n"
+    echo -en "                         rootfs -> Deletes only the root file system images.\n"
     echo -en "                         repos -> Deletes the directory where the repository are cloned.\n\n"
     echo -en "[-a] cpu architecture : armhf -> 32-bit architecture\n"
     echo -en "                        aarch64 -> 64-bit architecture\n\n"
@@ -236,7 +236,7 @@ else
     kernel_comp "${linux_crep}" "${KDEV_ARCH}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${Kernel_cfg}"
     distro_rootfs "${APT_URL}" "${RELEASE}" "${KEY_FILE}" "${DIST}" "${ID}" "${KDEV_ARCH}" "${distro_all_pkg}" "${rootfs_targz}"
     
-    os_pre_build '70M' '970M' "${chrootfs}" "${img_name}" "${rootfs_targz}"
+    os_pre_build '70M' '970M' "${chrootfs}" "${img_name}" "${rootfs_targz}" "${RELEASE}"
     
     os_build "${arch}" "${chrootfs}" "${firmware_crep}" "${chroot_sdir}" "${works_lfc}"
     os_build_exec=$?
