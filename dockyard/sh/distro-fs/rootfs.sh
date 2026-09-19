@@ -71,9 +71,7 @@ distro_rootfs() {
 	local arch=$6
 	local os_inst_pkgs=$7
 	local targz_fpath=$8
-	local tmp_rootfs="/tmp/rootfs_deb"
-	local tmp_img="/tmp/rootfs.img"
-	
+		
     for r in $(find "${targz_fpath%/*}" -maxdepth 1 -type f -name '*.tar.gz')
     do
 	
@@ -89,10 +87,15 @@ distro_rootfs() {
 	[[ -z ${targz_rootfs} ]] && targz_rootfs=false
 		
 	if [[ "${targz_rootfs}" = false ]];then
+
+		local tmp_rootfs="/mnt/rootfs_deb"
+		local tmp_img="/tmp/rootfs.img"
 		
 		echo -en "We have to write and compress the root file system ${targz_fpath##*/}\n"
 		echo -en "It's going to take a while...\n\n"
-		
+
+		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
+			
 		if [[ ${distro_id} -ge 12 ]];then
 		
 			qemu-img create -f raw "${tmp_img}" 750M > /dev/null
@@ -104,12 +107,11 @@ distro_rootfs() {
 		fi
 		
 		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
-		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
 		[[ ${arch} == "arm" ]] && arch="armhf"
 		local LOOPDEVS=$(kpartx -avs "${tmp_img}" | awk '{print $3}')
 		local LOOPROOTFS=/dev/mapper/$(echo ${LOOPDEVS} | awk '{print $1}')
 		mkfs.ext4 ${LOOPROOTFS} >/dev/null 2>&1
-		mount ${LOOPROOTFS} ${tmp_rootfs}
+		mount ${LOOPROOTFS} ${tmp_rootfs}		
 		debootstrap --keyring="${keyr}" --include=ca-certificates --include="${os_inst_pkgs}" --arch="${arch}" "${rel}" "${tmp_rootfs}" "${apt_url}/" >/dev/null 2>&1
 		local exit_code_deb=$?
 		

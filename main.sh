@@ -217,7 +217,7 @@ else
     source "${works_lfh}"
     
     works_chroot_layout.py --usrchroots "${chroot_usr}" --shellvarsf "${works_lfc}" --apturl "${APT_URL}" --urlsec "${APT_URL_SEC}" \
-                           --distID "${ID}" --release "${RELEASE}" --kerneln "${KERNEL}"
+                           --kerneln "${KERNEL}"
 
     chroot_scripts_cfg "${chroot_scripts}" "${chroot_sdir}" "${works_lfc}"
     chroot_cfg_check=$?

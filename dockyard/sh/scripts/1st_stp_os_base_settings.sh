@@ -43,6 +43,9 @@ export -p LC_NUMERIC="${LANG_CODE}.UTF-8" >/dev/null 2>&1
 export -p LC_MESSAGES="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 export -p LC_TIME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 
+distro_ID=$(lsb_release -rs)
+dist_name=$(lsb_release -cs)
+
 devbootfs=$(blkid --label ${pboot} -o value)
 devrootfs=$(blkid --label ${prootfs} -o value)
 bootcmd="dwc_otg.lpm_enable=0 console=ttyAMA0,115200 console=tty1 root=PARTUUID=$(blkid -s PARTUUID -o value ${devrootfs}) rootfstype=ext4 fsck.repair=yes cgroup_enable=memory elevator=deadline rootwait"
@@ -140,24 +143,24 @@ os_mnts
 /bin/cat /dev/null > /etc/apt/sources.list
 /bin/cat <<etc_apt_sources_list >> /etc/apt/sources.list
 # See https://wiki.debian.org/SourcesList for more information.
-deb ${APT_URL} ${RELEASE} main non-free-firmware
-#deb-src ${APT_URL} ${RELEASE} main non-free-firmware
+deb ${APT_URL} ${dist_name} main non-free-firmware
+# deb-src ${APT_URL} ${dist_name} main non-free-firmware
 
-deb ${APT_URL} ${RELEASE}-updates main non-free-firmware
-#deb-src ${APT_URL} ${RELEASE}-updates main non-free-firmware
+deb ${APT_URL} ${dist_name}-updates main non-free-firmware
+# deb-src ${APT_URL} ${dist_name}-updates main non-free-firmware
 
-deb ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
-#deb-src ${APT_URL_SEC} ${RELEASE}-security main non-free-firmware
+deb ${APT_URL_SEC} ${dist_name}-security main non-free-firmware
+# deb-src ${APT_URL_SEC} ${dist_name}-security main non-free-firmware
 
 # Backports allow you to install newer versions of software made available for this release
-#deb ${APT_URL} ${RELEASE}-backports main non-free-firmware
-#deb-src ${APT_URL} ${RELEASE}-backports main non-free-firmware
+# deb ${APT_URL} ${dist_name}-backports main non-free-firmware
+# deb-src ${APT_URL} ${dist_name}-backports main non-free-firmware
 
 etc_apt_sources_list
 
 echo -en "\nWe are installing the /etc/apt/sources.list...\n" 		
 
-if [[ ${ID} -ge 13 ]];then
+if [[ -n $(apt list -qq --installed 2>&1 | grep -w "sqv") && ${distro_ID} -ge 12 ]];then
 
 	movedf="/etc/apt/sources.list.d/moved-from-main.sources"
 	
