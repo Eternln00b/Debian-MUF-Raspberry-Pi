@@ -158,7 +158,7 @@ deb ${APT_URL_SEC} ${dist_name}-security main non-free-firmware
 
 etc_apt_sources_list
 
-echo -en "\nWe are installing the /etc/apt/sources.list...\n" 		
+echo -en "\nI'm installing the /etc/apt/sources.list...\n" 		
 
 if [[ -n $(apt list -qq --installed 2>&1 | grep -w "sqv") && ${distro_ID} -ge 12 ]];then
 
@@ -174,6 +174,7 @@ if [[ -n $(apt list -qq --installed 2>&1 | grep -w "sqv") && ${distro_ID} -ge 12
 	else
 	
 		echo -en "I don't have the will to fix this for the moment...\n"
+		exit
 
 	fi
 
