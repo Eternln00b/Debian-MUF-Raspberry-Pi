@@ -243,7 +243,7 @@ else
     
     if [[ ${os_build_exec} -eq 0 ]];then
         
-        kernel_install "${linux_crep}" "${KDEV_ARCH}" "${KERNEL}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${chrootfs}"
+        kernel_install "${linux_crep}" "${KDEV_ARCH}" "${KERNEL}" "${KERNEL_IMG}" "${CC_COMPILER}" "${chrootfs}"
         kernel_install_exec=$?
         
     else

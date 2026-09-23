@@ -166,18 +166,28 @@ if [[ -n $(apt list -qq --installed 2>&1 | grep -w "sqv") && ${distro_ID} -ge 12
 	
 	echo "I'm modernizing the sources.list..."
 	apt modernize-sources -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+	m_src_check=$?
 	
-	if [[ -f ${movedf} ]];then 
+	if [[ ${m_src_check} -ne 0 ]];then
 	
-		sed -e 's|Signed-By:|Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg|' -i ${movedf}
-
-	else
-	
-		echo -en "I don't have the will to fix this for the moment...\n"
+		echo -en "the package manager seems not support the operation modernize-sources...\n\n"
 		exit
-
+	
+	else
+    
+        if [[ -f ${movedf} ]];then
+        
+			sed -e 's|Signed-By:|Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg|' -i ${movedf}
+	    
+	    else
+	    
+		    echo -en "I don't have the will to fix this for the moment...\n"
+		    exit
+		    
+	    fi
+	
 	fi
-
+	
 fi
 
 apt update -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
