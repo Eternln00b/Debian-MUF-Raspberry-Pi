@@ -10,7 +10,7 @@ kernel_comp() {
 	local K_CFG=$6
 	local c_itm="${kernel_src_dir}/arch/${K_ARCH}/boot"
 	local PROC=$(nproc)
-	local dtbs=$(find ${c_itm} -type f -name '*.dtb' 2>/dev/null | wc -l)
+	local dtbs=$(find ${c_itm}/dts/broadcom -type f -name '*.dtb' 2>/dev/null | wc -l)
 	local K_IMG_P=$(find ${c_itm} -type f -name "${K_IMG}")
 		
 	if [[ -z "${K_IMG_P}" && "${dtbs}" -eq 0 ]];then
@@ -30,7 +30,7 @@ kernel_comp() {
 		else
 		
 			[[ "${K_CFG}" = true ]] && make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" -j "${PROC}" menuconfig
-			make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" "${K_IMG}" modules dtbs -j "${PROC}"
+			make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" "${K_IMG}" modules dtbs -j "${PROC}"						
 			echo -en "\n"
 		
 		fi
@@ -48,10 +48,12 @@ kernel_install() {
 	local CC_COMP=$5
 	local ROOT_PART=$6
 	local BOOT_PART=${ROOT_PART}/boot
+	local brand="broadcom"
 	local c_itm="${kernel_src_dir}/arch/${K_ARCH}/boot"
 	local PROC=$(nproc)
-	local dtbs=$(find ${c_itm} -type f -name '*.dtb' 2>/dev/null | wc -l)
+	local dtbs=$(find "${c_itm}/dts/${brand}" -type f -name '*.dtb' 2>/dev/null | wc -l)
 	local K_IMG_P=$(find ${c_itm} -type f -name "${K_IMG}")
+	local dtb_bootp="${BOOT_PART}/${brand}"
 	
 	if [[ -n "${K_IMG_P}" && "${dtbs}" -gt 0 ]];then
 	
@@ -61,17 +63,17 @@ kernel_install() {
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_MOD_PATH="${ROOT_PART}" modules_install -j "${PROC}" &> /dev/null
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_DTBS_PATH="${BOOT_PART}" dtbs_install -j "${PROC}" &> /dev/null
 		
-		# I have to find a better solution. 
-		if [[ "${K_ARCH}" == "arm64" ]];then 
+		# I'm just bored...
+		if [[ "${K_ARCH}" == "arm64" && "$(ls -1 ${dtb_bootp} | wc -l)" -gt 0 ]];then 
 		
-			for dtb_comp in $(find "${BOOT_PART}/broadcom" -maxdepth 1 -name "*.dtb")
+			for dtb_comp in $(find "${dtb_bootp}" -maxdepth 1 -name "*.dtb")
 			do
 			
 				mv ${dtb_comp} ${BOOT_PART}
 			
 			done
 			
-			rm -rf "${BOOT_PART}/broadcom"
+			rm -rf "${dtb_bootp}"
 		
 		fi
 		
