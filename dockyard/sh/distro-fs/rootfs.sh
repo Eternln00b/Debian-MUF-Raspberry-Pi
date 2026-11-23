@@ -72,8 +72,8 @@ distro_rootfs() {
 	local os_inst_pkgs=$7
 	local targz_fpath=$8
 		
-    for r in $(find "${targz_fpath%/*}" -maxdepth 1 -type f -name '*.tar.gz')
-    do
+	for r in $(find "${targz_fpath%/*}" -maxdepth 1 -type f -name '*.tar.gz')
+	do
 	
 		if [[  "$(basename "$r")" == "$(basename "${targz_fpath}")" ]]; then 
 		
@@ -82,7 +82,7 @@ distro_rootfs() {
 				
 		fi
 	
-    done
+	done
 	
 	[[ -z ${targz_rootfs} ]] && targz_rootfs=false
 		
@@ -198,14 +198,20 @@ os_build() {
 	local dev_scripts=$4
 	local dev_vars=$5
 	local firmware_precomp="${firmware_dir}/boot"
-	local mnt_bootfs=${mnt_rootfs}/boot
-	local mnt_chck=$(awk '/\57dev\57mapper\57loop[0-99]/' /proc/mounts | wc -l)
-		
-	if [[ ${mnt_chck} -ne 2 ]];then
-	
-		echo -en "The loop device isn't mounted...\n"
+	local mnt_bootfs="${mnt_rootfs}/boot"
+	local rootfs_chck=$(mountpoint -q "${mnt_rootfs}"; echo $?)
+	local bootfs_chck=$(mountpoint -q "${mnt_bootfs}"; echo $?)
+
+	if [[ ${rootfs_chck} -ne 0 ]];then
+
+		echo -en "The root file system isn't mounted on ${mnt_rootfs}...\n"
 		return 1
+	
+	elif [[ ${bootfs_chck} -ne 0 ]];then
 		
+		echo -en "The boot partition isn't mounted on ${mnt_bootfs}...\n"
+		return 1
+
 	elif [[ ! -d "${firmware_precomp}" ]];then
 	
 		echo -en "The firmware folder is missing...\n" 
@@ -248,7 +254,7 @@ os_build() {
 		
 				echo -en "There's an issue with the chroot script ${chrt_script}...\n"
 				return 1
-        
+		
 			fi
 	
 		done
