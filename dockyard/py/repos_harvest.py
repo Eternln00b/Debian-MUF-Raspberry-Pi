@@ -6,13 +6,7 @@ import os
 import csv
 import sys
 import argparse
-<<<<<<< HEAD
-import requests
-import tempfile
-from git import Repo
-=======
 from git import Repo, Git, GitCommandError
->>>>>>> 1c700bf (repos_harvest.py script updated)
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -55,9 +49,6 @@ def csv_rows(repos_list):
     except Exception as e:
         return -1
 
-<<<<<<< HEAD
-def repo_chck(repos_list,csv_1f,csv_2f):
-=======
 def repo_name(url):
     urlpath = Path(urlparse(url).path)
     repn = urlpath.name
@@ -71,7 +62,6 @@ def repo_chck(repos_list,csv_1f,csv_2f):
     os.environ["GIT_TERMINAL_PROMPT"] = "0"
     git_cmd = Git()
 
->>>>>>> 1c700bf (repos_harvest.py script updated)
     try:
         with open(repos_list, 'r', newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -80,22 +70,6 @@ def repo_chck(repos_list,csv_1f,csv_2f):
                 url = row.get(csv_2f, '').strip()
 
                 if url and branch:
-<<<<<<< HEAD
-                    urltp = urlparse(url)
-                    upath = urltp.path.strip("/") 
-                    api_req = upath.split("/")
-
-                    usrn = api_req[0]  
-                    repn = api_req[1]
-
-                    api_url = f"https://api.github.com/repos/{usrn}/{repn}/branches/{branch}"
-                    response = requests.get(api_url)
-
-                    if response.status_code != 200:
-                        print(f"the repo '{url}' or the branch '{branch}' likely doesn't exist...")
-                        sys.exit(1)
-    
-=======
                     try:
                         remote_refs = git_cmd.ls_remote(url, f"refs/heads/{branch}", f"refs/tags/{branch}",
                                                         kill_after_timeout=60)
@@ -108,16 +82,11 @@ def repo_chck(repos_list,csv_1f,csv_2f):
                         print(f"the branch or the tag '{branch}' doesn't exist in the repo '{url}'...")
                         sys.exit(1)
 
->>>>>>> 1c700bf (repos_harvest.py script updated)
     except Exception as e:
         print(f"There was an issue with the repos to check... {e}")
         sys.exit(1)
     
-<<<<<<< HEAD
-def cloning_repo(repos_list,dest,outf,csv_1f,csv_2f):                                 
-=======
 def cloning_repo(repos_list,dest,outf,csv_1f,csv_2f,csv_3f):                                 
->>>>>>> 1c700bf (repos_harvest.py script updated)
     try:
         with open(repos_list, 'r', newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -126,19 +95,10 @@ def cloning_repo(repos_list,dest,outf,csv_1f,csv_2f,csv_3f):
                 for row in reader:
                     branch = row.get(csv_1f, '').strip()
                     url = row.get(csv_2f, '').strip()
-<<<<<<< HEAD
-                    
-                    if branch and url :
-                        urltp = urlparse(url)
-                        upath = urltp.path.strip("/") 
-                        urlsplit = upath.split("/")
-                        repn = urlsplit[1]
-=======
                     sparse = (row.get(csv_3f) or '').strip()
                     
                     if branch and url :
                         repn = repo_name(url)
->>>>>>> 1c700bf (repos_harvest.py script updated)
                         dir_name = repn + "-" + branch
                         dest_path = os.path.join(dest, dir_name)
                         sh_vn = repn + "_" + "crep" + "=" + "'" + dest_path + "'" + "\n"
@@ -149,9 +109,6 @@ def cloning_repo(repos_list,dest,outf,csv_1f,csv_2f,csv_3f):
                                 os.makedirs(dest_path, exist_ok=True)
                                 print(f"I'm cloning the repo {url}. The selected branch is '{branch}'")
                                 nproc = os.cpu_count()
-<<<<<<< HEAD
-                                Repo.clone_from(url, dest_path, depth=1, branch=branch, single_branch=True, jobs=nproc)
-=======
                                 
                                 if sparse:
                                     print(f"Only these items will be checked out : {sparse}")
@@ -163,7 +120,6 @@ def cloning_repo(repos_list,dest,outf,csv_1f,csv_2f,csv_3f):
                                 
                                 else:
                                     Repo.clone_from(url, dest_path, depth=1, branch=branch, single_branch=True, jobs=nproc)
->>>>>>> 1c700bf (repos_harvest.py script updated)
                                                 
     except Exception as e:
         print(f"Can't clone the repos for the moment... {e}")
@@ -182,10 +138,7 @@ def main():
     
     csv_1cls = "branch"
     csv_2cls = "url"
-<<<<<<< HEAD
-=======
     csv_3cls = "sparse"
->>>>>>> 1c700bf (repos_harvest.py script updated)
 
     argv = pargv.parse_args()
     file_ok, msg = csv_checking(argv.repolst,csv_1cls,csv_2cls)
@@ -211,11 +164,7 @@ def main():
         else:
             repo_chck(argv.repolst,csv_1cls,csv_2cls)
             cloning_repo(argv.repolst,argv.clonedrdir,
-<<<<<<< HEAD
-                         argv.listdrf,csv_1cls,csv_2cls)            
-=======
                          argv.listdrf,csv_1cls,csv_2cls,csv_3cls)            
->>>>>>> 1c700bf (repos_harvest.py script updated)
             
 if __name__ == "__main__":
     main()
