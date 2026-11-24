@@ -1,3 +1,3 @@
-branch,url
-rpi-6.18.y,https://github.com/raspberrypi/linux
-master,https://github.com/raspberrypi/firmware
+branch,url,sparse
+rpi-6.18.y,https://github.com/raspberrypi/linux,
+master,https://github.com/raspberrypi/firmware,/boot/bootcode.bin /boot/*.elf /boot/*.dat /boot/COPYING.linux /boot/LICENCE.broadcom
