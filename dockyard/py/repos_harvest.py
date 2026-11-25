@@ -3,11 +3,14 @@
 # Author : https://github.com/Eternln00b
 
 import os
+import re
 import csv
 import sys
 import argparse
+import requests
 from git import Repo, Git, GitCommandError
 from pathlib import Path
+from functools import lru_cache
 from urllib.parse import urlparse
 
 def csv_checking(repos_list,csv_1f,csv_2f):
@@ -58,6 +61,94 @@ def repo_name(url):
 
     return repn
 
+def rpi_kernel_released(kernel_head,min_sublevel=1):
+    makefile_url = f"https://raw.githubusercontent.com/raspberrypi/linux/{kernel_head}/Makefile"
+
+    try:
+        response = requests.get(makefile_url, timeout=30)
+
+    except requests.RequestException:
+        return False
+
+    if response.status_code != 200:
+        return False
+
+    makefile_vars = {}
+
+    for line in response.text.splitlines()[:10]:
+        mk_var = re.fullmatch(r"(SUBLEVEL|EXTRAVERSION)\s*=\s*(.*)", line.strip())
+
+        if mk_var:
+            makefile_vars[mk_var.group(1)] = mk_var.group(2).strip()
+
+    sublevel = makefile_vars.get("SUBLEVEL", "0")
+    extraversion = makefile_vars.get("EXTRAVERSION", "")
+
+    return extraversion == "" and sublevel.isdigit() and int(sublevel) >= min_sublevel
+
+# result kept in memory : the branch is looked up only once
+@lru_cache(maxsize=None)
+def rpi_kernel_ref(url,branch):
+    rpi_kernel_repo = "github.com/raspberrypi/linux"
+    urltp = urlparse(url)
+    repo_path = (urltp.netloc + urltp.path).lower().rstrip("/")
+
+    if repo_path.endswith(".git"):
+        repo_path = repo_path[:-4]
+
+    if branch not in ("default", "latest", "recent"):
+        return branch
+
+    elif repo_path != rpi_kernel_repo:
+        print(f"The keyword '{branch}' can only be used with https://{rpi_kernel_repo}...")
+        sys.exit(1)
+
+    os.environ["GIT_TERMINAL_PROMPT"] = "0"
+    git_cmd = Git()
+    kernel_ref = None
+
+    try:
+        if branch == "default":
+            remote_head = git_cmd.ls_remote("--symref", url, "HEAD", kill_after_timeout=60)
+
+            for line in remote_head.splitlines():
+                if line.startswith("ref: refs/heads/"):
+                    kernel_ref = line.split()[1].replace("refs/heads/", "")
+                    break
+
+        else:
+            remote_heads = git_cmd.ls_remote("--heads", url, "rpi-*", kill_after_timeout=60)
+            kernel_vers = {}
+
+            for line in remote_heads.splitlines():
+                head = line.split()[1].replace("refs/heads/", "")
+                head_ver = re.fullmatch(r"rpi-(\d+)\.(\d+)\.y", head)
+
+                if head_ver:
+                    kernel_vers[head] = (int(head_ver.group(1)), int(head_ver.group(2)))
+
+            kernel_heads = sorted(kernel_vers, key=kernel_vers.get, reverse=True)
+
+            if branch == "latest" and kernel_heads:
+                kernel_ref = kernel_heads[0]
+
+            elif branch == "recent":
+                for head in kernel_heads:
+                    if rpi_kernel_released(head):
+                        kernel_ref = head
+                        break
+
+    except GitCommandError:
+        print(f"I can't reach the repo '{url}' to find the '{branch}' kernel branch...")
+        sys.exit(1)
+
+    if kernel_ref is None:
+        print(f"I can't find the '{branch}' kernel branch in the repo '{url}'...")
+        sys.exit(1)
+
+    print(f"The '{branch}' kernel branch is '{kernel_ref}'")
+    return kernel_ref
+
 def repo_chck(repos_list,csv_1f,csv_2f):
     os.environ["GIT_TERMINAL_PROMPT"] = "0"
     git_cmd = Git()
@@ -70,6 +161,8 @@ def repo_chck(repos_list,csv_1f,csv_2f):
                 url = row.get(csv_2f, '').strip()
 
                 if url and branch:
+                    branch = rpi_kernel_ref(url, branch)
+
                     try:
                         remote_refs = git_cmd.ls_remote(url, f"refs/heads/{branch}", f"refs/tags/{branch}",
                                                         kill_after_timeout=60)
@@ -98,6 +191,8 @@ def cloning_repo(repos_list,dest,outf,csv_1f,csv_2f,csv_3f):
                     sparse = (row.get(csv_3f) or '').strip()
                     
                     if branch and url :
+                        branch = rpi_kernel_ref(url, branch)
+
                         repn = repo_name(url)
                         dir_name = repn + "-" + branch
                         dest_path = os.path.join(dest, dir_name)
