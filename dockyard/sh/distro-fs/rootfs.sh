@@ -140,7 +140,7 @@ boot_size_calc() {
 	local K_ARCH=$2
 	local K_IMG=$3
 	local firmware_dir=$4
-	local boot_margin=${5:-2}
+	local boot_margin=${5:-6}
 	local c_itm="${kernel_src_dir}/arch/${K_ARCH}/boot"
 	local firmware_precomp="${firmware_dir}/boot"
 	local K_IMG_P=$(find ${c_itm} -type f -name "${K_IMG}" 2>/dev/null)
