@@ -22,7 +22,7 @@ deb_pkg_listing() {
 		
 		if [[ -n ${deb_projectf} && -f ${deb_projectf} ]];then
 		
-			local pkgs_project=$(sed -z 's/\n/,/g' ${deb_projectf})
+			local pkgs_project=$(grep '^[^@#]' ${deb_projectf} | sed -z 's/\n/,/g;s/.$//')
 		
 		fi
 		
@@ -89,29 +89,21 @@ distro_rootfs() {
 	if [[ "${targz_rootfs}" = false ]];then
 
 		local tmp_rootfs="/mnt/rootfs_deb"
-		local tmp_img="/tmp/rootfs.img"
 		
 		echo -en "We have to write and compress the root file system ${targz_fpath##*/}\n"
 		echo -en "It's going to take a while...\n\n"
 
-		[[ ! -d ${tmp_rootfs} ]] && mkdir -p "${tmp_rootfs}"
-			
-		if [[ ${distro_id} -ge 12 ]];then
+		# a previous build could have left something behind
+		for mnt_left in $(awk -v rootfs_dir="${tmp_rootfs}/" 'index($2, rootfs_dir) == 1 {print $2}' /proc/mounts | sort -r)
+		do
 		
-			qemu-img create -f raw "${tmp_img}" 750M > /dev/null
+			umount -l "${mnt_left}" || true
 		
-		else
+		done
 		
-			qemu-img create -f raw "${tmp_img}" 700M > /dev/null
-		
-		fi
-		
-		(echo "n"; echo "p"; echo "1"; echo ""; echo ""; echo "w") | fdisk "${tmp_img}" > /dev/null
+		rm -rf "${tmp_rootfs}"
+		mkdir -p "${tmp_rootfs}"
 		[[ ${arch} == "arm" ]] && arch="armhf"
-		local LOOPDEVS=$(kpartx -avs "${tmp_img}" | awk '{print $3}')
-		local LOOPROOTFS=/dev/mapper/$(echo ${LOOPDEVS} | awk '{print $1}')
-		mkfs.ext4 ${LOOPROOTFS} >/dev/null 2>&1
-		mount ${LOOPROOTFS} ${tmp_rootfs}		
 		debootstrap --keyring="${keyr}" --include=ca-certificates --include="${os_inst_pkgs}" --arch="${arch}" "${rel}" "${tmp_rootfs}" "${apt_url}/" >/dev/null 2>&1
 		local exit_code_deb=$?
 		
@@ -128,13 +120,65 @@ distro_rootfs() {
 					
 		fi
 		
-		umount -l "${tmp_rootfs}" || true
-		kpartx -dvs "${tmp_img}" >/dev/null 2>&1
-		rm -rf "${tmp_rootfs}" "${tmp_img}"
+		for mnt_left in $(awk -v rootfs_dir="${tmp_rootfs}/" 'index($2, rootfs_dir) == 1 {print $2}' /proc/mounts | sort -r)
+		do
+		
+			umount -l "${mnt_left}" || true
+		
+		done
+		
+		rm -rf "${tmp_rootfs}"
 		[[ ${exit_code_deb} -ne 0 ]] && exit
 				
 	fi
 			
+}
+
+boot_size_calc() {
+
+	local kernel_src_dir=$1
+	local K_ARCH=$2
+	local K_IMG=$3
+	local firmware_dir=$4
+	local boot_margin=${5:-2}
+	local c_itm="${kernel_src_dir}/arch/${K_ARCH}/boot"
+	local firmware_precomp="${firmware_dir}/boot"
+	local K_IMG_P=$(find ${c_itm} -type f -name "${K_IMG}" 2>/dev/null)
+	local cluster=4096
+	local boot_bytes=0
+	local boot_files=()
+	
+	if [[ -z "${K_IMG_P}" ]];then
+	
+		echo -en "I can't find the kernel image to compute the size of the boot partition...\n" >&2
+		return 1
+	
+	elif [[ ! -d "${firmware_precomp}" ]];then
+	
+		echo -en "I can't find the firmware to compute the size of the boot partition...\n" >&2
+		return 1
+	
+	else
+	
+		boot_files+=("${K_IMG_P}")
+		boot_files+=($(find -H "${c_itm}/dts/broadcom" "${c_itm}/dts/overlays" -type f \( -name '*.dtb' -o -name '*.dtbo' -o -name 'README' \) 2>/dev/null))
+		boot_files+=($(find "${firmware_precomp}" -maxdepth 1 -type f \( -name 'bootcode.bin' -o -name '*.elf' -o -name '*.dat' -o -name 'COPYING.linux' -o -name 'LICENCE.broadcom' \)))
+		
+		for boot_file in "${boot_files[@]}"
+		do
+		
+			# on a FAT partition, each file takes at least one cluster
+			local file_bytes=$(stat -c %s "${boot_file}")
+			boot_bytes=$(( boot_bytes + ( (file_bytes + cluster - 1) / cluster ) * cluster ))
+		
+		done
+		
+		# + 10% for the FAT tables and the folders, rounded up to the MiB, + the margin ( MiB )
+		local boot_mib=$(( (boot_bytes + boot_bytes / 10 + 1048575) / 1048576 + boot_margin ))
+		echo -en "${boot_mib}M"
+	
+	fi
+	
 }
 
 os_pre_build() {

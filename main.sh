@@ -36,7 +36,8 @@ usage() {
     echo -en "[-k] this switch allows the kernel configuration.\n\n"
     echo -en "[-u] this switch update the package management system.\n\n"
     echo -en "[-x] this switch compress the image file.\n\n"
-    echo -en "usage: $(basename "$0") -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -u -x]\n\n"
+    echo -en "[-l] this switch builds a lighter image ( no documentation, no manuals, no recommended packages... ).\n\n"
+    echo -en "usage: $(basename "$0") -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -l -u -x]\n\n"
     echo -en 'Note: You can only build an image as sudo !\n'
     echo
     exit
@@ -76,6 +77,7 @@ finish() {
     
     else
         
+        img_fit "${img_name}"
         final_debian_img
     
     fi
@@ -87,7 +89,7 @@ declare arch
 declare Kernel_Ver 
 declare Kernel_cfg
 
-while getopts ":R:a:c:kux" opt; do
+while getopts ":R:a:c:klux" opt; do
     case ${opt} in
         R)
             rpi_model="$OPTARG"
@@ -103,6 +105,10 @@ while getopts ":R:a:c:kux" opt; do
             
         k)
             Kernel_cfg=true
+            ;;
+        
+        l)
+            img_light=true
             ;;
         
         u)
@@ -197,6 +203,21 @@ else
     [[ -n "${to_rm}" ]] && usage_clear_m
     [[ -z ${Kernel_cfg} ]] && Kernel_cfg=false
     [[ -z ${apt_update} ]] && apt_update=false
+    [[ -z ${img_light} ]] && img_light=false
+    rootfs_flavor=""
+    pkgs_full="${ITEMS}/distro/debian_os_pkgs_full.lst"
+    
+    if [[ ${img_light} = true ]];then
+        
+        echo -en "\n[!] You chose to build a lighter image. Be aware that :\n"
+        echo -en "    - the documentation, the manual pages and the translations ( except your language ) are removed.\n"
+        echo -en "    - apt won't install the recommended packages anymore, even later on the Raspberry Pi.\n"
+        echo -en "    - the packages lists are removed : you will have to run 'sudo apt update' before installing anything.\n"
+        echo -en "    - the packages listed in ${pkgs_full##*/} are not installed.\n\n"
+        rootfs_flavor="_light"
+        pkgs_full=""
+        
+    fi
     
     apt_pkgs_chck ${apt_update}
     py_mod_chck
@@ -210,7 +231,7 @@ else
     
     repos_harvest.py --repolst "${csv_fd}/repos_lst.csv" --clonedrdir "${repos_dir}" --listdrf "${tmp_lst_cr}"
     works_layout.py --buildcfg "${csv_fd}/construction_cfg.csv" --raspberry "${rpi_model}" --architecture "${arch}" --chrootsd "${WORKS}/sh/scripts" \
-                    --usrchroots "${ITEMS}/distro/usr_settings" --targzrootfs "${project_itmd}/${DIST}-${ID}_${arch}.tar.gz" \
+                    --usrchroots "${ITEMS}/distro/usr_settings" --targzrootfs "${project_itmd}/${DIST}-${ID}_${arch}${rootfs_flavor}.tar.gz" \
                     --imgfile "/tmp/${DIST}-${RELEASE}-${rpi_model}-${arch}.img" --tmpclonedrlf "${tmp_lst_cr}" --shellvarsf "${works_lfh}"
     
     sed -e 's|[\x2B]|_Plus|g' -i "${works_lfh}"
@@ -218,6 +239,8 @@ else
     
     works_chroot_layout.py --usrchroots "${chroot_usr}" --shellvarsf "${works_lfc}" --apturl "${APT_URL}" --urlsec "${APT_URL_SEC}" \
                            --kerneln "${KERNEL}"
+    
+    echo -en "img_light=${img_light}\n" | dd conv=notrunc oflag=append of=${works_lfc} >/dev/null 2>&1
 
     chroot_scripts_cfg "${chroot_scripts}" "${chroot_sdir}" "${works_lfc}"
     chroot_cfg_check=$?
@@ -227,7 +250,7 @@ else
     keyring_check=$?
     [[ ${keyring_check} -ne 0 ]] && exit
     
-    distro_all_pkg=$(deb_pkg_listing "${ID}" "${ITEMS}/distro/debian_os_pkgs.lst")
+    distro_all_pkg=$(deb_pkg_listing "${ID}" "${ITEMS}/distro/debian_os_pkgs.lst" "${pkgs_full}")
     deb_pkg_chck=$?
     [[ ${deb_pkg_chck} -ne 0 ]] && exit
     
@@ -236,7 +259,13 @@ else
     kernel_comp "${linux_crep}" "${KDEV_ARCH}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${Kernel_cfg}"
     distro_rootfs "${APT_URL}" "${RELEASE}" "${KEY_FILE}" "${DIST}" "${ID}" "${KDEV_ARCH}" "${distro_all_pkg}" "${rootfs_targz}"
     
-    os_pre_build '70M' '970M' "${chrootfs}" "${img_name}" "${rootfs_targz}" "${RELEASE}"
+    boot_size=$(boot_size_calc "${linux_crep}" "${KDEV_ARCH}" "${KERNEL_IMG}" "${firmware_crep}")
+    boot_size_chck=$?
+    [[ ${boot_size_chck} -ne 0 ]] && exit
+    echo -en "The boot partition will be ${boot_size}B.\n"
+    
+    # temporary size : the image is reduced to its content at the end ( img_fit )
+    os_pre_build "${boot_size}" '4G' "${chrootfs}" "${img_name}" "${rootfs_targz}" "${RELEASE}"
     
     os_build "${arch}" "${chrootfs}" "${firmware_crep}" "${chroot_sdir}" "${works_lfc}"
     os_build_exec=$?

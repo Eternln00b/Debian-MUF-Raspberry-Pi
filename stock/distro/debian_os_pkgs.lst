@@ -8,10 +8,9 @@ console-setup-linux
 dbus
 dhcpcd5
 fake-hwclock
+fdisk
 ifupdown
 iputils-ping
-isc-dhcp-client
-isc-dhcp-common
 iw
 keyboard-configuration
 kmod

@@ -1,0 +1,4 @@
+# Packages installed only in the full image ( not with the switch -l ) !
+
+isc-dhcp-client
+isc-dhcp-common
