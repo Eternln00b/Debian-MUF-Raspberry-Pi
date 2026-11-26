@@ -232,7 +232,10 @@ dpkg_light_conf
 	for lang_kept in ${langs_kept}
 	do
 
-		if ! grep -qxF "path-include /usr/share/locale/${lang_kept%%[_.]*}*" "${dpkg_light}";then
+		locale_rule="path-include /usr/share/locale/${lang_kept%%[_.]*}*"
+		rule_chck=$(grep -qxF "${locale_rule}" "${dpkg_light}"; echo $?)
+
+		if [[ ${rule_chck} -ne 0 ]];then
 
 			easy_append "path-include /usr/share/locale/${lang_kept%%[_.]*}*" "${dpkg_light}"
 
