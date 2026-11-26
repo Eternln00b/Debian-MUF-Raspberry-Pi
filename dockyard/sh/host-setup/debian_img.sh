@@ -15,9 +15,30 @@ img_fit() {
     
     mkdir -p ${mnt_old} ${mnt_new}
     mount -o ro ${LOOPDEVROOTFS} ${mnt_old}
+    local mount_chck=$?
+    
+    if [[ ${mount_chck} -ne 0 ]];then
+    
+        echo -en "[!] I can't mount the root file system, the image keeps its size...\n"
+        kpartx -dvs ${img_file} >/dev/null 2>&1
+        rm -rf ${mnt_old} ${mnt_new}
+        return 1
+    
+    fi
     
     # space really taken by the files + the journal ( 16 MiB ) + the margin ( MiB ) + 2% for the inodes tables
     local rootfs_bytes=$(du -sx --block-size=1 ${mnt_old} | cut -f1)
+    
+    # less than 100 MiB : something is wrong, the image isn't touched
+    if [[ -z "${rootfs_bytes}" || ${rootfs_bytes} -lt 104857600 ]];then
+    
+        echo -en "[!] The root file system looks empty ( ${rootfs_bytes} bytes ), the image keeps its size...\n"
+        umount -l ${mnt_old} || true
+        kpartx -dvs ${img_file} >/dev/null 2>&1
+        rm -rf ${mnt_old} ${mnt_new}
+        return 1
+    
+    fi
     local rootfs_mib=$(( ( (rootfs_bytes + (16 + rootfs_margin) * 1048576) * 100 / 98 + 1048575 ) / 1048576 ))
     
     echo -en "\nThe root file system takes $(( rootfs_bytes / 1048576 ))M, its partition will be ${rootfs_mib}M...\n"

@@ -56,16 +56,44 @@ finish() {
 	
     sync
     local usr_id=$(id -u ${called_by})
-    local mnt_dirs=("proc" "dev" "sys" "tmp")
-        
-    for os_dir in "${mnt_dirs[@]}"
+    # reverse order of os_pre_build : the sub-folders first
+    local mnt_dirs=("boot" "tmp" "sys" "dev/pts" "dev" "proc")
+    
+    # a process started in the chroot ( gpg-agent, dirmngr... ) keeps the root file system busy
+    for proc_root in /proc/[0-9]*/root
     do
         
-        umount -l "${chrootfs}/${os_dir}" || true
+        local proc_rootdir=$(readlink "${proc_root}" 2>/dev/null)
+        
+        if [[ "${proc_rootdir}" == "${chrootfs}" || "${proc_rootdir}" == "${chrootfs}/"* ]];then
+            
+            local proc_id=${proc_root#/proc/}
+            kill -9 ${proc_id%/root} >/dev/null 2>&1 || true
+            
+        fi
         
     done
     
-    umount -l "${chrootfs}" || true
+    sleep 1
+    
+    for os_dir in "${mnt_dirs[@]}"
+    do
+        
+        if [[ $(mountpoint -q "${chrootfs}/${os_dir}"; echo $?) -eq 0 ]];then
+        
+            umount "${chrootfs}/${os_dir}" >/dev/null 2>&1 || umount -l "${chrootfs}/${os_dir}" || true
+        
+        fi
+        
+    done
+    
+    if [[ $(mountpoint -q "${chrootfs}"; echo $?) -eq 0 ]];then
+    
+        umount "${chrootfs}" >/dev/null 2>&1 || umount -l "${chrootfs}" || true
+    
+    fi
+    
+    sync
     kpartx -dvs ${img_name} >/dev/null 2>&1
     rm -rf "${chrootfs}"
     py_scripts_clr
@@ -74,6 +102,12 @@ finish() {
     if [[ ${os_build_exec} -ne 0 || ${kernel_install_exec} -ne 0 ]];then 
         
         rm ${img_name}
+    
+    elif [[ -n "$(losetup -j ${img_name})" ]];then
+        
+        # the image is still used by a loop device : img_fit would read a file system still in use
+        echo -en "[!] The image is still in use, its size can't be fitted to its content...\n"
+        final_debian_img
     
     else
         
