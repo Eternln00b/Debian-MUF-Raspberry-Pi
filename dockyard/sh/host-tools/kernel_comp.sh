@@ -60,7 +60,7 @@ kernel_install() {
 		cp "${K_IMG_P}" ${BOOT_PART}/${K_BOOT}.img
 		cd "${kernel_src_dir}"
 		
-		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_MOD_PATH="${ROOT_PART}" modules_install -j "${PROC}" &> /dev/null
+		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_MOD_PATH="${ROOT_PART}" INSTALL_MOD_STRIP=1 modules_install -j "${PROC}" &> /dev/null
 		make ARCH="${K_ARCH}" CROSS_COMPILE="${CC_COMP}" INSTALL_DTBS_PATH="${BOOT_PART}" dtbs_install -j "${PROC}" &> /dev/null
 		
 		# I'm just bored...

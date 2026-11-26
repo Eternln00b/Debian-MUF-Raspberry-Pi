@@ -30,8 +30,24 @@ fi
 echo -en "\nWe are in the chroot...\n\n"
 
 source ${VARS_CHROOT}
+
+# LANG ( usr_settings ) is the language of the messages, LANG_CODE is the locale
+usr_lang="${LANG}"
+lang_short="${LANG_CODE%%_*}"
+
+if [[ -z "${usr_lang}" ]];then
+
+	usr_lang="${lang_short}"
+
+elif [[ "${usr_lang%%[_:.]*}" != "${lang_short}" ]];then
+
+	echo -en "[!] LANG='${usr_lang}' doesn't match LANG_CODE='${LANG_CODE}'.\n"
+	echo -en "    The messages will be in '${usr_lang}' and the formats ( dates, currency... ) in '${LANG_CODE}'.\n\n"
+
+fi
+
 export -p LANG="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LANGUAGE="${LANG}" >/dev/null 2>&1  
+export -p LANGUAGE="${usr_lang}" >/dev/null 2>&1  
 export -p LC_ADDRESS="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 export -p LC_IDENTIFICATION="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 export -p LC_MEASUREMENT="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
@@ -70,7 +86,7 @@ done 3< <(printf "%s\n" "${os_txt_append[@]}") 4< <(printf "%s\n" "${os_sysfiles
 
 sed -e "s|# ${LANG} UTF-8|${LANG} UTF-8|" -i /etc/locale.gen
 locale-gen
-update-locale LANGUAGE=${LANG_CODE} LANG=${LANG} LC_ALL=${LANG}
+update-locale LANGUAGE=${usr_lang} LANG=${LANG} LC_ALL=${LANG}
 
 ln -sf /usr/share/zoneinfo/"${timezone}" /etc/localtime
 dpkg-reconfigure --frontend=noninteractive tzdata >/dev/null 2>&1
@@ -188,6 +204,71 @@ if [[ -n $(apt list -qq --installed 2>&1 | grep -w "sqv") && ${distro_ID} -ge 12
 	
 	fi
 	
+fi
+
+if [[ "${img_light}" == "true" ]];then
+
+	echo -en "\nThe image is going to be lighter...\n"
+	langs_kept="${lang_short} ${usr_lang//:/ }"
+	apt_light="/etc/apt/apt.conf.d/99_light_img"
+	dpkg_light="/etc/dpkg/dpkg.cfg.d/99_light_img"
+
+	/bin/cat /dev/null > ${apt_light}
+	/bin/cat <<apt_light_conf >> ${apt_light}
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+apt_light_conf
+
+	/bin/cat /dev/null > ${dpkg_light}
+	/bin/cat <<dpkg_light_conf >> ${dpkg_light}
+path-exclude /usr/share/doc/*
+path-include /usr/share/doc/*/copyright
+path-exclude /usr/share/man/*
+path-exclude /usr/share/info/*
+path-exclude /usr/share/locale/*
+path-include /usr/share/locale/locale.alias
+dpkg_light_conf
+
+	for lang_kept in ${langs_kept}
+	do
+
+		if ! grep -qxF "path-include /usr/share/locale/${lang_kept%%[_.]*}*" "${dpkg_light}";then
+
+			easy_append "path-include /usr/share/locale/${lang_kept%%[_.]*}*" "${dpkg_light}"
+
+		fi
+
+	done
+
+	# the rules above only apply to the next packages, the packages installed by debootstrap are cleaned here
+	find /usr/share/doc -mindepth 1 ! -type d ! -name copyright -delete
+	find /usr/share/doc -mindepth 1 -type d -empty -delete
+	rm -rf /usr/share/man/* /usr/share/info/*
+
+	for locale_dir in $(find /usr/share/locale -mindepth 1 -maxdepth 1 -type d)
+	do
+
+		keep_dir=false
+
+		for lang_kept in ${langs_kept}
+		do
+
+			if [[ "${locale_dir##*/}" == ${lang_kept%%[_.]*}* ]];then
+
+				keep_dir=true
+
+			fi
+
+		done
+
+		if [[ "${keep_dir}" == "false" ]];then
+
+			rm -rf "${locale_dir}"
+
+		fi
+
+	done
+
 fi
 
 apt update -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1

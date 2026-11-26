@@ -20,8 +20,9 @@ if [[ ! -f ${VARS_CHROOT} ]];then
 fi
 
 source ${VARS_CHROOT}
+usr_lang="${LANG:-${LANG_CODE%%_*}}"
 export -p LANG="${LANG_CODE}.UTF-8"
-export -p LANGUAGE="${LANG}"
+export -p LANGUAGE="${usr_lang}"
 export -p LC_ADDRESS="${LANG_CODE}.UTF-8"
 export -p LC_IDENTIFICATION="${LANG_CODE}.UTF-8"
 export -p LC_MEASUREMENT="${LANG_CODE}.UTF-8"
