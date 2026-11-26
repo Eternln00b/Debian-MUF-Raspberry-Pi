@@ -31,10 +31,10 @@ img_fit() {
     cp -a ${mnt_old}/. ${mnt_new}/
     local copy_chck=$?
     
-    umount ${mnt_new}
-    umount ${mnt_old}
+    umount -l ${mnt_new} || true
+    umount -l ${mnt_old} || true
     kpartx -dvs ${img_file} >/dev/null 2>&1
-    rmdir ${mnt_old} ${mnt_new}
+    rm -rf ${mnt_old} ${mnt_new}
     
     if [[ ${copy_chck} -ne 0 ]];then
     
@@ -52,7 +52,7 @@ img_fit() {
     echo ",$(( rootfs_mib * 2048 ))" | sfdisk --no-reread -N 2 ${img_file} >/dev/null 2>&1
     rm -f ${rootfs_new}
     
-    echo -en "The image is now $(( $(stat -c %s ${img_file}) / 1048576 ))M.\n"
+    echo -en "The image size is now $(( $(stat -c %s ${img_file}) / 1048576 ))M.\n"
     
 }
 

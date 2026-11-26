@@ -2,3 +2,7 @@
 
 isc-dhcp-client
 isc-dhcp-common
+iw
+libssl-dev
+rsync
+wget

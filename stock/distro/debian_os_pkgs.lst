@@ -11,13 +11,8 @@ fake-hwclock
 fdisk
 ifupdown
 iputils-ping
-iw
 keyboard-configuration
 kmod
-libnl-3-200
-libnl-genl-3-200
-libnl-route-3-200
-libssl-dev
 locales
 lsb-base
 lsb-release
@@ -25,11 +20,9 @@ nano
 openssh-server
 perl
 psmisc
-rsync
 sudo
 tcpd
 tzdata
 udev
 usbutils
 util-linux
-wget
