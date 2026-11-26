@@ -8,7 +8,7 @@ apt autoremove -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 
 [[ -d /var/log/journal ]] && rm -rf /var/log/journal/*
 
-tos=$(find /var/log /lost+found /tmp -type f)
+tos=$(find /var/log /lost+found /var/tmp -type f)
 for i in $tos
 do
 
@@ -16,5 +16,5 @@ do
 
 done
 
-truncate -s 0 /etc/machine-id /var/lib/dbus/machine-id
-rm -rf /lost+found /var/lib/dbus/machine-id
+truncate -s 0 /etc/machine-id
+rm -rf /lost+found

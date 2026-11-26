@@ -36,18 +36,18 @@ elif [[ "${usr_lang%%[_:.]*}" != "${lang_short}" ]];then
 
 fi
 
-export -p LANG="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LANGUAGE="${usr_lang}" >/dev/null 2>&1  
-export -p LC_ADDRESS="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_IDENTIFICATION="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_MEASUREMENT="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_MONETARY="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_NAME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_PAPER="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_TELEPHONE="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_NUMERIC="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_MESSAGES="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
-export -p LC_TIME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LANG="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LANGUAGE="${usr_lang}" >/dev/null 2>&1
+export -p LC_ADDRESS="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_IDENTIFICATION="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_MEASUREMENT="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_MONETARY="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_NAME="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_PAPER="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_TELEPHONE="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_NUMERIC="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_MESSAGES="${LANG_CODE}.UTF-8" >/dev/null 2>&1
+export -p LC_TIME="${LANG_CODE}.UTF-8" >/dev/null 2>&1
 
 expand_script="/usr/local/sbin/expand_rootfs.sh"
 expand_service="/etc/systemd/system/expand_rootfs.service"
