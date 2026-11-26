@@ -20,19 +20,34 @@ if [[ ! -f ${VARS_CHROOT} ]];then
 fi
 
 source ${VARS_CHROOT}
-usr_lang="${LANG:-${LANG_CODE%%_*}}"
-export -p LANG="${LANG_CODE}.UTF-8"
-export -p LANGUAGE="${usr_lang}"
-export -p LC_ADDRESS="${LANG_CODE}.UTF-8"
-export -p LC_IDENTIFICATION="${LANG_CODE}.UTF-8"
-export -p LC_MEASUREMENT="${LANG_CODE}.UTF-8"
-export -p LC_MONETARY="${LANG_CODE}.UTF-8"
-export -p LC_NAME="${LANG_CODE}.UTF-8"
-export -p LC_PAPER="${LANG_CODE}.UTF-8"
-export -p LC_TELEPHONE="${LANG_CODE}.UTF-8"
-export -p LC_NUMERIC="${LANG_CODE}.UTF-8"
-export -p LC_MESSAGES="${LANG_CODE}.UTF-8"
-export -p LC_TIME="${LANG_CODE}.UTF-8"
+
+# LANG ( usr_settings ) is the language of the messages, LANG_CODE is the locale
+usr_lang="${LANG}"
+lang_short="${LANG_CODE%%_*}"
+
+if [[ -z "${usr_lang}" ]];then
+
+	usr_lang="${lang_short}"
+
+elif [[ "${usr_lang%%[_:.]*}" != "${lang_short}" ]];then
+
+	echo -en "[!] LANG='${usr_lang}' doesn't match LANG_CODE='${LANG_CODE}'.\n"
+	echo -en "    The messages will be in '${usr_lang}' and the formats ( dates, currency... ) in '${LANG_CODE}'.\n\n"
+
+fi
+
+export -p LANG="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LANGUAGE="${usr_lang}" >/dev/null 2>&1  
+export -p LC_ADDRESS="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_IDENTIFICATION="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_MEASUREMENT="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_MONETARY="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_NAME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_PAPER="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_TELEPHONE="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_NUMERIC="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_MESSAGES="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
+export -p LC_TIME="${LANG_CODE}.UTF-8" >/dev/null 2>&1  
 
 # /etc/hosts
 /bin/cat /dev/null > /etc/hosts
