@@ -28,7 +28,7 @@ usage :
 [-R] Raspberry pi models : (RPi5|500|500+|cm5|RPi4|400|cm4|cm4s|RPi3|RPi3+|cm3|cm3+|zero2w|RPi2|RPi1|cm1|zero|zerow)
 
 [-c] item(s) to remove : all -> Deletes the root file system image and the repos.
-                         rootfs -> Deletes only the root file system image.
+                         rootfs -> Deletes only the root file system images.
                          repos -> Deletes the directory where the repository are cloned.
 
 [-a] cpu architecture : armhf -> 32-bit architecture
@@ -40,9 +40,9 @@ usage :
 
 [-x] this switch compress the image file.
 
-usage: main.sh -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -u -x]
+[-l] this switch builds a lighter image ( no documentation, no manuals, no recommended packages... ).
 
-Note: You can only build an image as sudo !
+usage: main.sh -R <RPi model> [del][-c (all|rootfs|repos)] [opt][-a (cpu) -k -l -u -x]
 
 ```
 examples of installations :
