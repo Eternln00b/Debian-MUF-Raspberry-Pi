@@ -1,5 +1,26 @@
 #!/bin/bash
 
+set -e
+
+M_ARCH=$(uname -m)
+VARS_CHROOT=
+
+if [[ "$(id -u)" -ne 0 || "${M_ARCH}" == "x86_64" && "$(stat -c %d:%i /)" == "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+
+	echo "you are not in the chroot !"
+	exit
+
+fi
+
+if [[ ! -f ${VARS_CHROOT} ]];then
+
+	echo -en "[!] The variables aren't set. We have to stop.\n"
+	exit
+
+fi
+
+source ${VARS_CHROOT}
+
 # cleaning the img
 echo -en "\nWe are cleaning the img...\n"
 apt clean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
