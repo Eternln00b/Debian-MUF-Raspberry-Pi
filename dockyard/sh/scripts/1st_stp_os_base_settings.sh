@@ -70,6 +70,9 @@ os_sysfilest=('/boot/cmdline.txt' '/boot/config.txt' '/etc/apt/sources.list' '/e
 os_sysfilestxt=('/boot/cmdline.txt' '/etc/hostname' '/etc/timezone')
 os_txt_append=("${bootcmd}" "${hostname}" "${timezone}")
 
+apt_light="/etc/apt/apt.conf.d/99_light_img"
+dpkg_light="/etc/dpkg/dpkg.cfg.d/99_light_img"
+
 for filep in "${os_sysfilest[@]}"
 do
 
@@ -148,6 +151,31 @@ else
 
 fi
 
+# no service is started inside the chroot during the build
+/bin/cat /dev/null > /usr/sbin/policy-rc.d
+/bin/cat <<policy_rcd >> /usr/sbin/policy-rc.d
+#!/bin/sh
+exit 101
+policy_rcd
+
+chmod +x /usr/sbin/policy-rc.d
+
+/bin/cat /dev/null > ${apt_light}
+/bin/cat <<apt_light_conf >> ${apt_light}
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+apt_light_conf
+
+/bin/cat /dev/null > ${dpkg_light}
+/bin/cat <<dpkg_light_conf >> ${dpkg_light}
+path-exclude /usr/share/doc/*
+path-include /usr/share/doc/*/copyright
+path-exclude /usr/share/man/*
+path-exclude /usr/share/info/*
+path-exclude /usr/share/locale/*
+path-include /usr/share/locale/locale.alias
+dpkg_light_conf
+
 /bin/cat /dev/null > /etc/fstab
 /bin/cat <<os_mnts >> /etc/fstab
 proc            /proc           proc    defaults          0       0
@@ -210,24 +238,6 @@ if [[ "${img_light}" == "true" ]];then
 
 	echo -en "\nThe image is going to be lighter...\n"
 	langs_kept="${lang_short} ${usr_lang//:/ }"
-	apt_light="/etc/apt/apt.conf.d/99_light_img"
-	dpkg_light="/etc/dpkg/dpkg.cfg.d/99_light_img"
-
-	/bin/cat /dev/null > ${apt_light}
-	/bin/cat <<apt_light_conf >> ${apt_light}
-APT::Install-Recommends "false";
-APT::Install-Suggests "false";
-apt_light_conf
-
-	/bin/cat /dev/null > ${dpkg_light}
-	/bin/cat <<dpkg_light_conf >> ${dpkg_light}
-path-exclude /usr/share/doc/*
-path-include /usr/share/doc/*/copyright
-path-exclude /usr/share/man/*
-path-exclude /usr/share/info/*
-path-exclude /usr/share/locale/*
-path-include /usr/share/locale/locale.alias
-dpkg_light_conf
 
 	for lang_kept in ${langs_kept}
 	do
@@ -272,6 +282,16 @@ dpkg_light_conf
 
 	done
 
+else
+
+	for i in $(find /etc -type f -name "${apt_light##*/}")
+	do
+
+		truncate -s 0 "${i}" >/dev/null 2>&1
+		rm "${i}"
+
+	done
+
 fi
 
 apt update -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
@@ -279,8 +299,7 @@ apt clean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 apt autoclean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 apt autoremove -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 
-tmpfsch=$(find /var/log -type f)
-for i in $tmpfsch
+for i in $(find /var/log -type f)
 do
 
 	shred -v -n 1 -z "${i}" >/dev/null 2>&1
