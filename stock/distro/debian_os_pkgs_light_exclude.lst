@@ -1,0 +1,4 @@
+# Packages never installed in the light image ( with the switch -l ) !
+# For the packages debootstrap would install anyway ( priority "important" ). Never put an essential package here.
+
+nano

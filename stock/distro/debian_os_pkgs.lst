@@ -16,8 +16,6 @@ kmod
 locales
 lsb-base
 lsb-release
-nano
-openssh-server
 perl
 psmisc
 sudo

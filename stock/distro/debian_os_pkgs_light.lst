@@ -1,0 +1,4 @@
+# Packages installed only in the light image ( with the switch -l ) !
+
+dropbear
+vim-tiny

@@ -12,6 +12,10 @@ project_itmd="${BUILD_AREA}/.project-items"
 repos_dir="${project_itmd}/git"
 csv_fd="${ITEMS}/csv"
 
+# size of the temporary image used during the build. It's a sparse file : only what is written takes space on the disk.
+# at the end, img_fit reduces the image to its content. Increase it if you add a lot of packages ( a desktop... )
+img_work_size="4G"
+
 source $WORKS/sh/distro-fs/rootfs.sh
 source $WORKS/sh/distro-fs/distro_keyring.sh
 source $WORKS/sh/host-setup/debian_img.sh
@@ -239,7 +243,9 @@ else
     [[ -z ${apt_update} ]] && apt_update=false
     [[ -z ${img_light} ]] && img_light=false
     rootfs_flavor=""
-    pkgs_full="${ITEMS}/distro/debian_os_pkgs_full.lst"
+    # packages added to the common list ( debian_os_pkgs.lst ) : the full list, or the light list with -l
+    pkgs_extra="${ITEMS}/distro/debian_os_pkgs_full.lst"
+    pkgs_exclude=""
     
     if [[ ${img_light} = true ]];then
         
@@ -247,9 +253,17 @@ else
         echo -en "    - the documentation, the manual pages and the translations ( except your language ) are removed.\n"
         echo -en "    - apt won't install the recommended packages anymore, even later on the Raspberry Pi.\n"
         echo -en "    - the packages lists are removed : you will have to run 'sudo apt update' before installing anything.\n"
-        echo -en "    - the packages listed in ${pkgs_full##*/} are not installed.\n\n"
+        echo -en "    - the packages listed in debian_os_pkgs_full.lst are replaced by the ones in debian_os_pkgs_light.lst.\n"
+        echo -en "    - the packages listed in debian_os_pkgs_light_exclude.lst are never installed.\n\n"
         rootfs_flavor="_light"
-        pkgs_full=""
+        pkgs_extra="${ITEMS}/distro/debian_os_pkgs_light.lst"
+        
+        # packages debootstrap would install anyway ( priority "important" ) : they are excluded ( debootstrap --exclude )
+        if [[ -f "${ITEMS}/distro/debian_os_pkgs_light_exclude.lst" ]];then
+        
+            pkgs_exclude=$(grep '^[^@#]' "${ITEMS}/distro/debian_os_pkgs_light_exclude.lst" | sed -z 's/\n/,/g;s/.$//')
+        
+        fi
         
     fi
     
@@ -284,14 +298,14 @@ else
     keyring_check=$?
     [[ ${keyring_check} -ne 0 ]] && exit
     
-    distro_all_pkg=$(deb_pkg_listing "${ID}" "${ITEMS}/distro/debian_os_pkgs.lst" "${pkgs_full}")
+    distro_all_pkg=$(deb_pkg_listing "${ID}" "${ITEMS}/distro/debian_os_pkgs.lst" "${pkgs_extra}")
     deb_pkg_chck=$?
     [[ ${deb_pkg_chck} -ne 0 ]] && exit
     
     trap finish EXIT
 	
     kernel_comp "${linux_crep}" "${KDEV_ARCH}" "${KERNEL_IMG}" "${CC_COMPILER}" "${DEFCONFIG}" "${Kernel_cfg}"
-    distro_rootfs "${APT_URL}" "${RELEASE}" "${KEY_FILE}" "${DIST}" "${ID}" "${KDEV_ARCH}" "${distro_all_pkg}" "${rootfs_targz}"
+    distro_rootfs "${APT_URL}" "${RELEASE}" "${KEY_FILE}" "${DIST}" "${ID}" "${KDEV_ARCH}" "${distro_all_pkg}" "${rootfs_targz}" "${pkgs_exclude}"
     
     boot_size=$(boot_size_calc "${linux_crep}" "${KDEV_ARCH}" "${KERNEL_IMG}" "${firmware_crep}")
     boot_size_chck=$?
@@ -299,7 +313,7 @@ else
     echo -en "The boot partition will be ${boot_size}B.\n"
     
     # temporary size : the image is reduced to its content at the end ( img_fit )
-    os_pre_build "${boot_size}" '4G' "${chrootfs}" "${img_name}" "${rootfs_targz}" "${RELEASE}"
+    os_pre_build "${boot_size}" "${img_work_size}" "${chrootfs}" "${img_name}" "${rootfs_targz}" "${RELEASE}"
     
     os_build "${arch}" "${chrootfs}" "${firmware_crep}" "${chroot_sdir}" "${works_lfc}"
     os_build_exec=$?

@@ -7,7 +7,7 @@ apt_pkgs_chck() {
                         'bison' 'bc' 'g++-arm-linux-gnueabihf' 'qemu-utils' 'qemu-user-static' 'gcc-arm-linux-gnueabi'
                         'flex' 'binfmt-support' 'libssl-dev' 'device-tree-compiler' 'squashfs-tools' 'build-essential'
                         'parallel' 'parted' 'debootstrap' 'debian-archive-keyring' 'ubuntu-keyring' 'device-tree-compiler'
-                        'kpartx')
+                        'kpartx' 'rsync')
         
         if [[ "${update_r}" = true ]];then
 			

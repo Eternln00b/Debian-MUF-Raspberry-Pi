@@ -71,6 +71,11 @@ distro_rootfs() {
 	local arch=$6
 	local os_inst_pkgs=$7
 	local targz_fpath=$8
+	local os_excl_pkgs=$9
+	local deb_excl=""
+	
+	# packages never installed ( even with the priority "important" )
+	[[ -n "${os_excl_pkgs}" ]] && deb_excl="--exclude=${os_excl_pkgs}"
 		
 	for r in $(find "${targz_fpath%/*}" -maxdepth 1 -type f -name '*.tar.gz')
 	do
@@ -104,7 +109,7 @@ distro_rootfs() {
 		rm -rf "${tmp_rootfs}"
 		mkdir -p "${tmp_rootfs}"
 		[[ ${arch} == "arm" ]] && arch="armhf"
-		debootstrap --keyring="${keyr}" --include=ca-certificates --include="${os_inst_pkgs}" --arch="${arch}" "${rel}" "${tmp_rootfs}" "${apt_url}/" >/dev/null 2>&1
+		debootstrap --keyring="${keyr}" --include=ca-certificates --include="${os_inst_pkgs}" ${deb_excl} --arch="${arch}" "${rel}" "${tmp_rootfs}" "${apt_url}/" >/dev/null 2>&1
 		local exit_code_deb=$?
 		
 		if [[ ${exit_code_deb} -ne 0 ]]; then
