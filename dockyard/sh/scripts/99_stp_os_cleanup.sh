@@ -2,6 +2,15 @@
 
 set -e
 
+f_eraser() {
+
+	local f_td=$1
+	truncate -s 0 "${f_td}"
+	shred -v -n 1 -z "${f_td}" >/dev/null 2>&1
+	rm "${f_td}"
+
+}
+
 M_ARCH=$(uname -m)
 VARS_CHROOT=
 
@@ -34,8 +43,7 @@ if [[ "${img_light}" == "true" ]];then
 	for i in $(find /var/lib/apt/lists -type f)
 	do
 
-		truncate -s 0 "${i}"
-		rm "${i}"		
+		f_eraser "${i}"
 
 	done
 
@@ -43,19 +51,25 @@ if [[ "${img_light}" == "true" ]];then
 
 fi
 
-for i in $(find /var/log /lost+found /var/tmp -type f)
+for i in $(find /var/{tmp,log} /lost+found -type f)
 do
 
-	truncate -s 0 "${i}"
-	rm "${i}" 
+	f_eraser "${i}"
 
 done
 
 for i in $(find /var/{lib,cache} -type f -name "*-old")
 do
 
-	truncate -s 0 "${i}"
-	rm "${i}" 
+	f_eraser "${i}" 
+
+done
+
+# the SSH host keys made during the build are removed : each Raspberry Pi generates its own keys at the first boot
+for i in $(find /etc/{dropbear,ssh} -type f \( -name "ssh_host_*" -o -name "dropbear_*_host_key" \) 2>/dev/null)
+do
+
+	f_eraser "${i}"
 
 done
 

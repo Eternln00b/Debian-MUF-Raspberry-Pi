@@ -52,6 +52,15 @@ img_fit() {
     # cp -a ${mnt_old}/. ${mnt_new}/
     rsync -aHAX --delete --numeric-ids ${mnt_old}/ ${mnt_new}/
     local copy_chck=$?
+    local copy_bytes=$(du -sx --block-size=1 ${mnt_new} | cut -f1)
+    
+    # the copy must hold at least 90% of the data : an empty or partial copy would destroy the image
+    if [[ ${copy_chck} -eq 0 && ${copy_bytes} -lt $(( rootfs_bytes * 90 / 100 )) ]];then
+    
+        echo -en "[!] The copy holds $(( copy_bytes / 1048576 ))M instead of $(( rootfs_bytes / 1048576 ))M...\n"
+        copy_chck=1
+    
+    fi
     
     umount -l ${mnt_new} || true
     umount -l ${mnt_old} || true

@@ -114,3 +114,71 @@ WantedBy=multi-user.target
 expand_unit
 
 systemctl enable expand_rootfs.service >/dev/null 2>&1
+sshkeys_script="/usr/local/sbin/ssh_host_keys.sh"
+sshkeys_service="/etc/systemd/system/ssh_host_keys.service"
+
+echo -en "\nThe SSH host keys will be generated at the first boot...\n"
+
+# the delimiter is quoted : the variables are written as they are, they will be read on the Raspberry Pi
+/bin/cat /dev/null > ${sshkeys_script}
+/bin/cat <<'ssh_host_keys' >> ${sshkeys_script}
+#!/bin/bash
+
+# if a step fails, the script stops and the service stays enabled : it will try again at the next boot
+set -e
+
+# OpenSSH ( full image ) : the missing host keys are created
+if [[ -x /usr/sbin/sshd ]];then
+
+	echo -en "Generating the OpenSSH host keys...\n"
+	ssh-keygen -A
+
+fi
+
+# dropbear ( light image ) : one host key per type
+if [[ -n "$(command -v dropbearkey)" ]];then
+
+	mkdir -p /etc/dropbear
+
+	for key_type in ed25519 ecdsa rsa
+	do
+
+		key_file="/etc/dropbear/dropbear_${key_type}_host_key"
+
+		if [[ ! -f "${key_file}" ]];then
+
+			echo -en "Generating the dropbear ${key_type} host key...\n"
+			dropbearkey -t "${key_type}" -f "${key_file}" >/dev/null
+
+		fi
+
+	done
+
+fi
+
+echo -en "The SSH host keys have been generated !\n"
+
+# the job is done : the service and this script are removed
+systemctl disable ssh_host_keys.service
+rm -f /etc/systemd/system/ssh_host_keys.service /usr/local/sbin/ssh_host_keys.sh
+systemctl daemon-reload
+ssh_host_keys
+
+chmod +x ${sshkeys_script}
+
+/bin/cat /dev/null > ${sshkeys_service}
+/bin/cat <<sshkeys_unit >> ${sshkeys_service}
+[Unit]
+Description=Generate the SSH host keys of this Raspberry Pi
+After=systemd-remount-fs.service
+Before=ssh.service ssh.socket dropbear.service
+
+[Service]
+Type=oneshot
+ExecStart=${sshkeys_script}
+
+[Install]
+WantedBy=multi-user.target
+sshkeys_unit
+
+systemctl enable ssh_host_keys.service >/dev/null 2>&1
