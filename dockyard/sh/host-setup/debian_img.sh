@@ -50,7 +50,7 @@ img_fit() {
     mkfs.ext4 -q -J size=16 -i 16384 -L "${rootfs_label}" ${rootfs_new} >/dev/null 2>&1
     mount -o loop ${rootfs_new} ${mnt_new}
     # cp -a ${mnt_old}/. ${mnt_new}/
-    rsync -anvHAX ${mnt_old}/ ${mnt_new}/
+    rsync -aHAX --delete --numeric-ids ${mnt_old}/ ${mnt_new}/
     local copy_chck=$?
     
     umount -l ${mnt_new} || true
