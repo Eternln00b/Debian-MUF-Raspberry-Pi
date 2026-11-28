@@ -5,8 +5,8 @@ set -e
 f_eraser() {
 
 	local f_td=$1
-	truncate -s 0 "${f_td}"
 	shred -v -n 1 -z "${f_td}" >/dev/null 2>&1
+	truncate -s 0 "${f_td}"
 	rm "${f_td}"
 
 }
